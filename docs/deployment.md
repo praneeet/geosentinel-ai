@@ -9,7 +9,7 @@
 ### Execution Steps
 ```bash
 # 1. Clone repository
-git clone https://github.com/praneetpravin/geosentinel-ai.git
+git clone https://github.com/praneeet/geosentinel-ai.git
 cd geosentinel-ai
 
 # 2. Configure environment

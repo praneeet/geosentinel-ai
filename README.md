@@ -132,7 +132,7 @@ $$R_c(t) = \min\left(100,\; \frac{\alpha}{N_c(T)} \sum_{i=1}^{N_c(T)} w_i \cdot 
 
 ### Clone Repository:
 ```bash
-git clone https://github.com/praneetpravin/geosentinel-ai.git
+git clone https://github.com/praneeet/geosentinel-ai.git
 cd geosentinel-ai
 ```
 
