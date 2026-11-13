@@ -10,6 +10,10 @@ CURATED_RSS_FEEDS = [
     {"name": "Al Jazeera English", "url": "https://www.aljazeera.com/xml/rss/all.xml", "credibility": 0.92},
     {"name": "UN News Global", "url": "https://news.un.org/feed/subscribe/en/news/all/rss.xml", "credibility": 0.98},
     {"name": "Deutsche Welle World", "url": "https://rss.dw.com/rdf/rss-en-world", "credibility": 0.94},
+    {"name": "France 24 World", "url": "https://www.france24.com/en/rss", "credibility": 0.93},
+    {"name": "The Guardian World", "url": "https://www.theguardian.com/world/rss", "credibility": 0.94},
+    {"name": "NPR World News", "url": "https://feeds.npr.org/1004/rss.xml", "credibility": 0.94},
+    {"name": "Sky News World", "url": "https://feeds.skynews.com/feeds/rss/world.xml", "credibility": 0.91},
 ]
 
 class RSSClient(BaseNewsSource):
@@ -30,7 +34,7 @@ class RSSClient(BaseNewsSource):
                     resp = await client.get(feed_info["url"], follow_redirects=True)
                     if resp.status_code == 200:
                         parsed = feedparser.parse(resp.text)
-                        for entry in parsed.entries[:10]:
+                        for entry in parsed.entries[:30]:
                             title = entry.get("title", "")
                             summary = entry.get("summary") or entry.get("description") or ""
                             link = entry.get("link", "")

@@ -1,3 +1,4 @@
+import json
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select, func
@@ -8,6 +9,18 @@ from app.models.article import Article
 from app.schemas.event import EventResponse, EventWithArticle, EventListResponse
 
 router = APIRouter()
+
+def ensure_list(val):
+    if isinstance(val, str):
+        try:
+            parsed = json.loads(val)
+            if isinstance(parsed, list):
+                return parsed
+        except Exception:
+            return []
+    if isinstance(val, list):
+        return val
+    return []
 
 @router.get("/events", response_model=EventListResponse)
 async def list_events(
@@ -48,7 +61,7 @@ async def list_events(
                 country_iso=ev.country_iso,
                 sentiment=ev.sentiment,
                 severity=ev.severity,
-                entities=ev.entities or [],
+                entities=ensure_list(ev.entities),
                 timestamp=ev.timestamp,
                 confidence=ev.confidence,
                 model_version=ev.model_version,
@@ -79,6 +92,7 @@ async def get_event(event_id: str, db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Event not found")
 
     ev, art_title, s_name, s_url = row
+
     return EventWithArticle(
         event_id=ev.event_id,
         article_id=ev.article_id,
@@ -86,7 +100,7 @@ async def get_event(event_id: str, db: AsyncSession = Depends(get_db)):
         country_iso=ev.country_iso,
         sentiment=ev.sentiment,
         severity=ev.severity,
-        entities=ev.entities or [],
+        entities=ensure_list(ev.entities),
         timestamp=ev.timestamp,
         confidence=ev.confidence,
         model_version=ev.model_version,
@@ -95,3 +109,63 @@ async def get_event(event_id: str, db: AsyncSession = Depends(get_db)):
         source_name=s_name,
         source_url=s_url,
     )
+
+@router.get("/events/export/csv")
+async def export_events_csv(
+    country_iso: Optional[str] = None,
+    category: Optional[str] = None,
+    limit: int = Query(500, ge=1, le=5000),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Exports structured geopolitical event telemetry as a downloadable CSV
+    for offline statistical and intelligence spreadsheet workflows.
+    """
+    import io
+    import csv
+    from fastapi.responses import Response
+
+    query = (
+        select(Event, Article.title, Article.source_name, Article.source_url)
+        .join(Article, Event.article_id == Article.article_id)
+    )
+    if country_iso:
+        query = query.where(Event.country_iso == country_iso.upper())
+    if category:
+        query = query.where(Event.category == category.upper())
+
+    stmt = query.order_by(Event.timestamp.desc()).limit(limit)
+    res = await db.execute(stmt)
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow([
+        "event_id", "timestamp", "country_iso", "category",
+        "sentiment", "severity", "confidence", "article_title",
+        "source_name", "source_url", "model_version"
+    ])
+
+    for ev, title, s_name, s_url in res.all():
+        writer.writerow([
+            ev.event_id,
+            ev.timestamp.isoformat() if ev.timestamp else "",
+            ev.country_iso,
+            ev.category,
+            round(ev.sentiment, 3) if ev.sentiment is not None else "",
+            round(ev.severity, 3) if ev.severity is not None else "",
+            round(ev.confidence, 3) if ev.confidence is not None else "",
+            title or "",
+            s_name or "",
+            s_url or "",
+            ev.model_version or "",
+        ])
+
+    csv_bytes = output.getvalue()
+    return Response(
+        content=csv_bytes,
+        media_type="text/csv",
+        headers={
+            "Content-Disposition": f"attachment; filename=geosentinel_events_{country_iso or 'all'}.csv"
+        },
+    )
+

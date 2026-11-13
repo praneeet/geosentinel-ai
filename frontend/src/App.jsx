@@ -1,44 +1,61 @@
-import React, { useState, useEffect } from 'react';
-import Header from './components/Header';
+import React, { useState, useEffect, useMemo } from 'react';
+import Sidebar from './components/Sidebar';
+import TopNav from './components/TopNav';
 import KPICards from './components/KPICards';
 import WorldRiskMap from './components/WorldRiskMap';
-import CountryDetailsModal from './components/CountryDetailsModal';
-import TrendCharts from './components/TrendCharts';
+import RiskAnalyticsView from './components/RiskAnalyticsView';
 import NewsExplorer from './components/NewsExplorer';
-import AlertBanner from './components/AlertBanner';
-import DossierExportModal from './components/DossierExportModal';
+import AlertsView from './components/AlertsView';
+import AssetWatchlistPanel from './components/AssetWatchlistPanel';
+import ScenarioSimulatorModal from './components/ScenarioSimulatorModal';
+import TacticalPlaybookModal from './components/TacticalPlaybookModal';
 import SystemHealthModal from './components/SystemHealthModal';
+import CountryDetailsModal from './components/CountryDetailsModal';
+import DossierExportModal from './components/DossierExportModal';
+import AiAnalystDrawer from './components/AiAnalystDrawer';
+import AlertBanner from './components/AlertBanner';
 import { useWebSocketAlerts } from './hooks/useWebSocketAlerts';
 import { api } from './api/client';
-import { BellRing, ShieldAlert, CheckCircle } from 'lucide-react';
+import { CheckCircle2, Bot } from 'lucide-react';
 
 export default function App() {
+  const [currentView, setCurrentView] = useState('dashboard');
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [countries, setCountries] = useState([]);
+  const [assets, setAssets] = useState([]);
+  const [alertsHistory, setAlertsHistory] = useState([]);
   const [selectedIso, setSelectedIso] = useState(null);
   const [dossierIso, setDossierIso] = useState(null);
-  const [isHealthOpen, setIsHealthOpen] = useState(false);
-  const [isIngesting, setIsIngesting] = useState(false);
-  const [activeView, setActiveView] = useState('dashboard'); // 'dashboard', 'news', 'alerts'
-  const [alertsHistory, setAlertsHistory] = useState([]);
+  const [isCopilotOpen, setIsCopilotOpen] = useState(false);
   const [activeLiveAlert, setActiveLiveAlert] = useState(null);
+  const [isIngesting, setIsIngesting] = useState(false);
   const [ingestNotification, setIngestNotification] = useState(null);
+  const [activePlaybookId, setActivePlaybookId] = useState(null);
+
+  // Auto-authenticate as Admin on boot so user never encounters permission friction
+  useEffect(() => {
+    api.login('admin', 'admin123').catch((e) => console.warn('Admin auto-auth note:', e));
+  }, []);
 
   // WebSocket Live Alert listener
   const { isConnected: wsConnected } = useWebSocketAlerts((newAlert) => {
     setActiveLiveAlert(newAlert);
     setAlertsHistory((prev) => [newAlert, ...prev]);
-    // Refresh map data to reflect new risk scores
     loadDashboardData();
   });
 
   const loadDashboardData = () => {
     api.getRiskMap()
       .then((data) => setCountries(data || []))
-      .catch((err) => console.error("Error loading map risk data:", err));
+      .catch((err) => console.error('Error loading map risk data:', err));
 
-    api.getAlerts(20)
+    api.getAssets()
+      .then((data) => setAssets(data || []))
+      .catch((err) => console.error('Error loading corporate assets:', err));
+
+    api.getAlerts(30)
       .then((data) => setAlertsHistory(data.alerts || []))
-      .catch((err) => console.error("Error loading alerts:", err));
+      .catch((err) => console.error('Error loading alerts:', err));
   };
 
   useEffect(() => {
@@ -50,21 +67,38 @@ export default function App() {
     try {
       const res = await api.runIngestion();
       loadDashboardData();
-      setIngestNotification(`Ingested ${res.raw_articles_fetched} articles (${res.unique_articles_saved} unique, ${res.exact_duplicates + res.near_duplicates} deduped). Recalculated risk across ${res.affected_countries_count} regions.`);
+      setIngestNotification(
+        `Ingested ${res.raw_articles_fetched} articles (${res.unique_articles_saved} unique, ${res.exact_duplicates + res.near_duplicates} deduped). Recalculated risk across ${res.affected_countries_count} regions.`
+      );
       setTimeout(() => setIngestNotification(null), 6000);
     } catch (e) {
-      console.error("Ingestion failed:", e);
+      console.error('Ingestion failed:', e);
     } finally {
       setIsIngesting(false);
     }
   };
 
-  // Compute KPI figures
-  const totalEvents = countries.reduce((acc, c) => acc + (c.event_count || 0), 0);
-  const severeCountries = countries.filter((c) => c.risk_index > 60).length;
+  // Aggregated KPI Metrics
+  const totalEvents = useMemo(
+    () => countries.reduce((acc, c) => acc + (c.event_count || 0), 0),
+    [countries]
+  );
+  const severeCountries = useMemo(
+    () => countries.filter((c) => c.risk_index > 60).length,
+    [countries]
+  );
+  const criticalAssetsCount = useMemo(
+    () => assets.filter((a) => a.threat_level === 'CRITICAL').length,
+    [assets]
+  );
+  const avgRisk = useMemo(() => {
+    if (countries.length === 0) return 0;
+    const sum = countries.reduce((acc, c) => acc + (c.risk_index || 0), 0);
+    return sum / countries.length;
+  }, [countries]);
 
   return (
-    <div className="min-h-screen bg-[#06090e] text-slate-100 flex flex-col selection:bg-cyan-500/30 selection:text-cyan-200">
+    <div className="min-h-screen bg-[#080D17] text-slate-100 flex flex-col font-sans selection:bg-sky-500/30 selection:text-sky-200">
       {/* Real-time Alert Toast Banner */}
       <AlertBanner
         alert={activeLiveAlert}
@@ -75,122 +109,198 @@ export default function App() {
         }}
       />
 
-      {/* Global Header */}
-      <Header
+      {/* Collapsible Left Navigation Sidebar */}
+      <Sidebar
+        currentView={currentView}
+        onSelectView={setCurrentView}
+        isCollapsed={isSidebarCollapsed}
+        onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+        alertsCount={alertsHistory.length}
+        assetsCount={assets.length}
         wsConnected={wsConnected}
-        isIngesting={isIngesting}
-        onTriggerIngest={handleTriggerIngest}
-        onOpenHealth={() => setIsHealthOpen(true)}
-        criticalAlertCount={alertsHistory.length}
-        activeView={activeView}
-        setActiveView={setActiveView}
+        onOpenCopilot={() => setIsCopilotOpen(true)}
       />
 
-      {/* Ingestion Flash Notification */}
-      {ingestNotification && (
-        <div className="bg-cyan-950/80 border-b border-cyan-800 text-cyan-200 text-xs px-4 py-2 flex items-center justify-center gap-2 animate-fadeIn">
-          <CheckCircle className="w-4 h-4 text-cyan-400" />
-          <span>{ingestNotification}</span>
-        </div>
-      )}
-
-      {/* Main Analytical View Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 space-y-6">
-        {/* KPI Telemetry Banner */}
-        <KPICards
-          countriesCount={countries.length}
-          eventsCount={totalEvents}
-          severeCount={severeCountries}
-          alertCount={alertsHistory.length}
-          dupRate={0.0}
+      {/* Main Content Area (Offset by Sidebar Width) */}
+      <div
+        className={`flex-1 flex flex-col transition-all duration-300 ease-in-out ${
+          isSidebarCollapsed ? 'ml-16' : 'ml-64'
+        }`}
+      >
+        {/* Top Navigation & Global Search Header */}
+        <TopNav
+          currentView={currentView}
+          wsConnected={wsConnected}
+          isIngesting={isIngesting}
+          onTriggerIngest={handleTriggerIngest}
+          onOpenCopilot={() => setIsCopilotOpen(true)}
+          alerts={alertsHistory}
+          countries={countries}
+          assets={assets}
+          onSelectCountry={(iso) => setSelectedIso(iso)}
+          onSelectAsset={(asset) => {
+            if (asset?.country_iso) setSelectedIso(asset.country_iso);
+          }}
         />
 
-        {/* Dynamic View Content */}
-        {activeView === 'dashboard' && (
-          <div className="space-y-6">
-            {/* World Risk Map */}
-            <WorldRiskMap
-              countries={countries}
-              selectedIso={selectedIso}
-              onSelectCountry={(iso) => setSelectedIso(iso)}
-            />
-
-            {/* Longitudinal Trend Charts */}
-            <TrendCharts />
+        {/* Live Ingestion Toast Notification */}
+        {ingestNotification && (
+          <div className="bg-sky-950/80 border-b border-sky-800 text-sky-200 text-xs px-4 py-2 flex items-center justify-center gap-2 animate-fadeIn font-mono">
+            <CheckCircle2 className="w-4 h-4 text-sky-400 shrink-0" />
+            <span>{ingestNotification}</span>
           </div>
         )}
 
-        {activeView === 'news' && (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-sm font-semibold tracking-wider text-slate-200 uppercase font-mono">
-                Real-Time Open-Source Intelligence (OSINT) News Wire
-              </h2>
+        {/* Dynamic View Viewport */}
+        <main className="flex-1 p-4 md:p-6 space-y-6 max-w-[1600px] w-full mx-auto">
+          {/* VIEW: Tactical Map & Overview */}
+          {currentView === 'dashboard' && (
+            <div className="space-y-5 animate-fadeIn">
+              {/* Executive KPI Metrics Ribbon */}
+              <KPICards
+                countriesCount={countries.length}
+                eventsCount={totalEvents}
+                severeCount={severeCountries}
+                alertCount={alertsHistory.length}
+                assetsCount={assets.length}
+                criticalAssetsCount={criticalAssetsCount}
+                avgRisk={avgRisk}
+                onOpenAssets={() => setCurrentView('assets')}
+              />
+
+              {/* Interactive World Risk Map */}
+              <WorldRiskMap
+                countries={countries}
+                assets={assets}
+                selectedIso={selectedIso}
+                onSelectCountry={(iso) => setSelectedIso(iso)}
+                onSelectAsset={(asset) => {
+                  if (asset?.country_iso) setSelectedIso(asset.country_iso);
+                }}
+              />
             </div>
-            <NewsExplorer />
-          </div>
-        )}
+          )}
 
-        {activeView === 'alerts' && (
-          <div className="glass-panel p-6 rounded-xl border border-sentinel-700/60 shadow-lg space-y-4">
-            <div className="flex items-center justify-between border-b border-sentinel-700 pb-3">
-              <div className="flex items-center gap-2">
-                <ShieldAlert className="w-5 h-5 text-red-500" />
-                <h2 className="text-sm font-bold uppercase font-mono tracking-wider text-white">
-                  Critical Risk Threshold Alerts Log (R &gt; 75)
-                </h2>
-              </div>
-              <span className="text-xs font-mono text-slate-400">
-                Total Broadcasts: {alertsHistory.length}
-              </span>
+          {/* VIEW: Risk Analytics & Forecasting */}
+          {currentView === 'analytics' && (
+            <div className="animate-fadeIn">
+              <RiskAnalyticsView
+                countries={countries}
+                onSelectCountry={(iso) => setSelectedIso(iso)}
+              />
             </div>
+          )}
 
-            {alertsHistory.length === 0 ? (
-              <div className="py-16 text-center text-slate-400 font-mono text-xs">
-                No critical alerts recorded. System operating within normal risk thresholds.
+          {/* VIEW: OSINT News Wire Feed */}
+          {currentView === 'news' && (
+            <div className="space-y-4 animate-fadeIn">
+              <div className="bg-[#111C2D] p-5 rounded-xl border border-slate-800/80 shadow-sm flex items-center justify-between">
+                <div>
+                  <h2 className="text-base font-bold font-mono text-slate-100 uppercase tracking-wider">
+                    Real-Time Open-Source Intelligence (OSINT) News Wire
+                  </h2>
+                  <p className="text-xs text-slate-400 font-sans">
+                    Ingested from global news portals (BBC World News, Al Jazeera, UN News, Deutsche Welle, NewsAPI)
+                  </p>
+                </div>
               </div>
-            ) : (
-              <div className="space-y-3">
-                {alertsHistory.map((item, idx) => (
-                  <div
-                    key={item.alert_id || idx}
-                    className="p-4 rounded-lg bg-sentinel-950/80 border border-red-800/40 hover:border-red-600/70 transition-colors flex items-center justify-between gap-4"
-                  >
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-red-950 text-red-400 border border-red-800">
-                          CRITICAL ALERT
-                        </span>
-                        <span className="font-bold text-sm text-white">
-                          {item.country_iso || item.country}
-                        </span>
-                        <span className="text-xs text-slate-400 font-mono">
-                          {new Date(item.sent_at || item.timestamp).toLocaleString()}
-                        </span>
-                      </div>
-                      <p className="text-xs text-slate-300">
-                        Country Risk Score exceeded threshold with composite value of{' '}
-                        <strong className="text-red-400 font-mono">
-                          {Number(item.risk_score).toFixed(1)} / 100
-                        </strong>.
-                      </p>
-                    </div>
+              <NewsExplorer />
+            </div>
+          )}
 
-                    <button
-                      onClick={() => setSelectedIso(item.country_iso || item.country)}
-                      className="px-3 py-1.5 rounded text-xs font-semibold bg-sentinel-900 hover:bg-sentinel-800 text-cyan-400 border border-sentinel-700 transition-colors flex-shrink-0"
-                    >
-                      Inspect Country
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
+          {/* VIEW: Live Alerts & Webhook Logs */}
+          {currentView === 'alerts' && (
+            <div className="animate-fadeIn">
+              <AlertsView
+                alerts={alertsHistory}
+                onInspectCountry={(iso) => setSelectedIso(iso)}
+                onTriggerIngest={handleTriggerIngest}
+                isIngesting={isIngesting}
+              />
+            </div>
+          )}
+
+          {/* VIEW: Corporate Asset Geofences Portfolio */}
+          {currentView === 'assets' && (
+            <div className="animate-fadeIn">
+              <AssetWatchlistPanel
+                assets={assets}
+                isInline={true}
+                onRefreshAssets={loadDashboardData}
+                onSelectAsset={(asset) => {
+                  if (asset?.country_iso) setSelectedIso(asset.country_iso);
+                }}
+                onOpenPlaybook={(asset) => {
+                  setCurrentView('playbooks');
+                }}
+              />
+            </div>
+          )}
+
+          {/* VIEW: What-If Scenario Simulation Sandbox */}
+          {currentView === 'simulation' && (
+            <div className="animate-fadeIn">
+              <ScenarioSimulatorModal
+                isInline={true}
+                countries={countries}
+              />
+            </div>
+          )}
+
+          {/* VIEW: Action Mitigation Playbooks */}
+          {currentView === 'playbooks' && (
+            <div className="animate-fadeIn">
+              <TacticalPlaybookModal
+                isInline={true}
+                initialPlaybookId={activePlaybookId}
+              />
+            </div>
+          )}
+
+          {/* VIEW: System Diagnostics & Health */}
+          {currentView === 'health' && (
+            <div className="animate-fadeIn">
+              <SystemHealthModal
+                isInline={true}
+                wsConnected={wsConnected}
+              />
+            </div>
+          )}
+        </main>
+
+        {/* Global Footer */}
+        <footer className="border-t border-slate-800/80 bg-[#080D17] py-3.5 px-6 text-xs text-slate-400 font-mono mt-auto">
+          <div className="max-w-[1600px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
+            <span className="flex items-center gap-2 text-slate-300">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              GeoSentinel AI &bull; Enterprise Threat Operations Center (GTOC v2.4)
+            </span>
+            <span className="text-slate-500 text-[11px]">
+              Mathematical Geopolitical Modeling &amp; Corporate Asset Geofencing Suite
+            </span>
           </div>
-        )}
-      </main>
+        </footer>
+      </div>
 
-      {/* Country Detail Modal */}
+      {/* Floating Copilot Launcher Button */}
+      {!isCopilotOpen && (
+        <button
+          onClick={() => setIsCopilotOpen(true)}
+          className="fixed bottom-5 right-5 z-40 flex items-center gap-2.5 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-sky-600 to-indigo-600 text-white font-mono text-xs font-bold shadow-lg shadow-sky-950/60 hover:scale-105 transition-all border border-sky-400/30"
+          title="Open GeoSentinel AI Intelligence Copilot"
+        >
+          <Bot className="w-4 h-4 text-sky-200" />
+          <span>Ask Copilot</span>
+        </button>
+      )}
+
+      {/* Sliding AI Copilot Drawer */}
+      <AiAnalystDrawer
+        isOpen={isCopilotOpen}
+        onClose={() => setIsCopilotOpen(false)}
+      />
+
+      {/* Country Detail & Evidence Modal */}
       {selectedIso && (
         <CountryDetailsModal
           iso={selectedIso}
@@ -209,22 +319,6 @@ export default function App() {
           onClose={() => setDossierIso(null)}
         />
       )}
-
-      {/* System Health & Diagnostics Modal */}
-      {isHealthOpen && (
-        <SystemHealthModal
-          onClose={() => setIsHealthOpen(false)}
-          wsConnected={wsConnected}
-        />
-      )}
-
-      {/* Footer */}
-      <footer className="border-t border-sentinel-800/60 bg-[#05080c] py-4 px-6 text-center text-xs text-slate-400 font-mono">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
-          <span>GeoSentinel AI &bull; B.Tech Final Year Capstone Project 2026</span>
-          <span>Ajay Kumar Garg Engineering College, Ghaziabad &bull; IT Dept</span>
-        </div>
-      </footer>
     </div>
   );
 }

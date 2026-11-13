@@ -1,85 +1,114 @@
 import React from 'react';
-import { Globe, Zap, AlertOctagon, BellRing, Filter, Clock } from 'lucide-react';
+import { Globe, Zap, AlertTriangle, BellRing, Building2, TrendingUp } from 'lucide-react';
 
 export default function KPICards({
   countriesCount = 0,
   eventsCount = 0,
   severeCount = 0,
   alertCount = 0,
-  dupRate = 0.0,
+  assetsCount = 0,
+  criticalAssetsCount = 0,
+  onOpenAssets,
+  avgRisk = 42.4,
 }) {
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-      {/* Countries Monitored */}
-      <div className="glass-panel p-3.5 rounded-xl border border-sentinel-700/60 shadow-lg">
-        <div className="flex items-center justify-between text-slate-400 mb-1">
-          <span className="text-xs uppercase font-mono tracking-wider">Monitored</span>
-          <Globe className="w-4 h-4 text-cyan-400" />
+    <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
+      {/* 1. Monitored Countries */}
+      <div className="bg-[#111C2D] p-3.5 rounded-xl border border-slate-800/80 shadow-sm hover:border-slate-700 transition-colors">
+        <div className="flex items-center justify-between text-slate-400 mb-1.5">
+          <span className="text-[10px] uppercase font-mono font-semibold tracking-wider">Monitored States</span>
+          <Globe className="w-3.5 h-3.5 text-sky-400" />
         </div>
-        <div className="text-2xl font-bold font-mono text-white tracking-tight">
+        <div className="text-2xl font-bold font-mono text-slate-100 tracking-tight">
           {countriesCount}
         </div>
-        <span className="text-[11px] text-cyan-400/80 font-medium">Sovereign Nations</span>
+        <div className="mt-1 flex items-center gap-1.5 text-[10px] font-mono text-slate-400">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+          <span>Global Coverage</span>
+        </div>
       </div>
 
-      {/* Events Processed */}
-      <div className="glass-panel p-3.5 rounded-xl border border-sentinel-700/60 shadow-lg">
-        <div className="flex items-center justify-between text-slate-400 mb-1">
-          <span className="text-xs uppercase font-mono tracking-wider">Active Events</span>
-          <Zap className="w-4 h-4 text-amber-400" />
+      {/* 2. Global Risk Index Composite */}
+      <div className="bg-[#111C2D] p-3.5 rounded-xl border border-slate-800/80 shadow-sm hover:border-slate-700 transition-colors">
+        <div className="flex items-center justify-between text-slate-400 mb-1.5">
+          <span className="text-[10px] uppercase font-mono font-semibold tracking-wider">Mean Risk Index</span>
+          <TrendingUp className="w-3.5 h-3.5 text-indigo-400" />
         </div>
-        <div className="text-2xl font-bold font-mono text-white tracking-tight">
+        <div className="text-2xl font-bold font-mono text-indigo-300 tracking-tight">
+          {Number(avgRisk).toFixed(1)} <span className="text-xs font-normal text-slate-400">/ 100</span>
+        </div>
+        <div className="mt-1 flex items-center gap-1.5 text-[10px] font-mono text-slate-400">
+          <span className="text-amber-400 font-semibold">Moderate</span>
+          <span>(7-Day Decay)</span>
+        </div>
+      </div>
+
+      {/* 3. Corporate Assets Geofenced */}
+      <div
+        onClick={onOpenAssets}
+        className="bg-[#111C2D] p-3.5 rounded-xl border border-sky-500/30 hover:border-sky-500/60 shadow-sm cursor-pointer transition-all group bg-gradient-to-br from-sky-950/20 to-transparent"
+      >
+        <div className="flex items-center justify-between text-slate-400 mb-1.5">
+          <span className="text-[10px] uppercase font-mono font-semibold tracking-wider text-sky-300">
+            Corporate Assets
+          </span>
+          <Building2 className="w-3.5 h-3.5 text-sky-400 group-hover:scale-110 transition-transform" />
+        </div>
+        <div className="text-2xl font-bold font-mono text-sky-300 tracking-tight">
+          {assetsCount}
+        </div>
+        <div className="mt-1 text-[10px] font-mono">
+          {criticalAssetsCount > 0 ? (
+            <span className="text-rose-400 font-bold flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></span>
+              {criticalAssetsCount} In Conflict Buffer
+            </span>
+          ) : (
+            <span className="text-emerald-400 font-medium">All Geofences Clear</span>
+          )}
+        </div>
+      </div>
+
+      {/* 4. Active Classified Events */}
+      <div className="bg-[#111C2D] p-3.5 rounded-xl border border-slate-800/80 shadow-sm hover:border-slate-700 transition-colors">
+        <div className="flex items-center justify-between text-slate-400 mb-1.5">
+          <span className="text-[10px] uppercase font-mono font-semibold tracking-wider">Active Incidents</span>
+          <Zap className="w-3.5 h-3.5 text-amber-400" />
+        </div>
+        <div className="text-2xl font-bold font-mono text-amber-400 tracking-tight">
           {eventsCount}
         </div>
-        <span className="text-[11px] text-amber-400/80 font-medium">NLP Classified Tuples</span>
+        <div className="mt-1 flex items-center gap-1.5 text-[10px] font-mono text-slate-400">
+          <span>NLP Sentiment &amp; NER</span>
+        </div>
       </div>
 
-      {/* Severe Risk Nations */}
-      <div className="glass-panel p-3.5 rounded-xl border border-sentinel-700/60 shadow-lg">
-        <div className="flex items-center justify-between text-slate-400 mb-1">
-          <span className="text-xs uppercase font-mono tracking-wider">Severe Risk</span>
-          <AlertOctagon className="w-4 h-4 text-rose-400" />
+      {/* 5. Severe Risk Nations */}
+      <div className="bg-[#111C2D] p-3.5 rounded-xl border border-slate-800/80 shadow-sm hover:border-slate-700 transition-colors">
+        <div className="flex items-center justify-between text-slate-400 mb-1.5">
+          <span className="text-[10px] uppercase font-mono font-semibold tracking-wider">Severe Theaters</span>
+          <AlertTriangle className="w-3.5 h-3.5 text-rose-400" />
         </div>
         <div className="text-2xl font-bold font-mono text-rose-400 tracking-tight">
           {severeCount}
         </div>
-        <span className="text-[11px] text-rose-400/80 font-medium">R &gt; 60 Threshold</span>
+        <div className="mt-1 text-[10px] font-mono text-rose-400/80">
+          <span>R &gt; 60 Crisis Level</span>
+        </div>
       </div>
 
-      {/* Active Alerts */}
-      <div className="glass-panel p-3.5 rounded-xl border border-sentinel-700/60 shadow-lg">
-        <div className="flex items-center justify-between text-slate-400 mb-1">
-          <span className="text-xs uppercase font-mono tracking-wider">Critical Alerts</span>
-          <BellRing className="w-4 h-4 text-red-500" />
+      {/* 6. Threshold Broadcast Alerts */}
+      <div className="bg-[#111C2D] p-3.5 rounded-xl border border-slate-800/80 shadow-sm hover:border-slate-700 transition-colors">
+        <div className="flex items-center justify-between text-slate-400 mb-1.5">
+          <span className="text-[10px] uppercase font-mono font-semibold tracking-wider">Threshold Alerts</span>
+          <BellRing className="w-3.5 h-3.5 text-rose-500" />
         </div>
-        <div className="text-2xl font-bold font-mono text-red-500 tracking-tight">
+        <div className="text-2xl font-bold font-mono text-slate-100 tracking-tight">
           {alertCount}
         </div>
-        <span className="text-[11px] text-red-400/80 font-medium">R &gt; 75 Dispatched</span>
-      </div>
-
-      {/* Dedup Filter */}
-      <div className="glass-panel p-3.5 rounded-xl border border-sentinel-700/60 shadow-lg">
-        <div className="flex items-center justify-between text-slate-400 mb-1">
-          <span className="text-xs uppercase font-mono tracking-wider">Dedup Leakage</span>
-          <Filter className="w-4 h-4 text-emerald-400" />
+        <div className="mt-1 text-[10px] font-mono text-slate-400">
+          <span>Discord &amp; Telegram Push</span>
         </div>
-        <div className="text-2xl font-bold font-mono text-emerald-400 tracking-tight">
-          {dupRate.toFixed(1)}%
-        </div>
-        <span className="text-[11px] text-emerald-400/80 font-medium">&lt; 1% Target Met</span>
-      </div>
-
-      {/* Temporal Half-Life */}
-      <div className="glass-panel p-3.5 rounded-xl border border-sentinel-700/60 shadow-lg">
-        <div className="flex items-center justify-between text-slate-400 mb-1">
-          <span className="text-xs uppercase font-mono tracking-wider">Half-Life Decay</span>
-          <Clock className="w-4 h-4 text-purple-400" />
-        </div>
-        <div className="text-2xl font-bold font-mono text-purple-400 tracking-tight">
-          7.0 d
-        </div>
-        <span className="text-[11px] text-purple-400/80 font-medium">&lambda; = ln(2)/7</span>
       </div>
     </div>
   );

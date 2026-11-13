@@ -21,6 +21,7 @@ from app.models.event import Event
 from app.models.country_score import CountryScore
 from app.models.summary import Summary
 from app.models.alert import Alert
+from app.models.risk_history import RiskScoreHistory
 from app.alerts.manager import alert_manager
 
 logger = logging.getLogger("geosentinel.ingestion")
@@ -37,18 +38,20 @@ class IngestionService:
         self._init_sources()
 
     def _init_sources(self):
-        # Primary external sources
+        # Live external API sources (if credentials provided)
         if settings.NEWSAPI_KEY:
             self.sources.append(NewsAPIClient(settings.NEWSAPI_KEY))
         if settings.MEDIASTACK_KEY:
             self.sources.append(MediaStackClient(settings.MEDIASTACK_KEY))
+
+        # Open-access news portals (BBC World News, Al Jazeera, UN News, Deutsche Welle)
         if settings.RSS_ENABLED:
             self.sources.append(RSSClient())
         if settings.GDELT_ENABLED:
             self.sources.append(GDELTClient())
 
-        # Academic demo source
-        if settings.DEMO_MODE or len(self.sources) == 0:
+        # Baseline fallback only if no live sources are configured
+        if len(self.sources) == 0:
             self.sources.append(DemoSource())
 
     async def run_pipeline(self, session: AsyncSession) -> Dict[str, Any]:
@@ -134,6 +137,7 @@ class IngestionService:
                     # NLP Processing
                     nlp_res = nlp_pipeline.process_article(norm)
                     country_iso = nlp_res["country_iso"]
+                    article_obj.country_hint = country_iso
                     affected_countries.add(country_iso)
 
                     # Save Event
@@ -234,6 +238,18 @@ class IngestionService:
                     calculated_at=datetime.now(timezone.utc),
                 )
                 session.add(new_score)
+
+            # Record historical snapshot for longitudinal trends
+            history_snapshot = RiskScoreHistory(
+                history_id=str(uuid.uuid4()),
+                country_iso=c_iso,
+                risk_index=risk_data["risk_index"],
+                risk_tier=risk_data["risk_tier"],
+                event_count=risk_data["event_count"],
+                contributing_factors=risk_data["contributing_factors"],
+                recorded_at=datetime.now(timezone.utc),
+            )
+            session.add(history_snapshot)
 
             # Check Alert Trigger (R > 75)
             if risk_data["is_critical"]:

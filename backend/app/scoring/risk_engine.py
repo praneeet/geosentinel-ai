@@ -184,8 +184,12 @@ class RiskScoringEngine:
         # Equation (1): R_c(t) = min(100, (alpha / N) * sum(...))
         # Note: when multiple significant events happen, risk aggregates proportionally
         raw_risk = (self.alpha / N) * sum_decayed
-        # Scale by event density factor: min(1.0 + math.log1p(N)/2, 2.5) for heightened multi-incident crises
-        density_multiplier = min(1.0 + math.log1p(N) * 0.45, 2.5)
+        # Scale by event density factor: baseline for N=1 matches Eq. 1; N > 1 accumulates crisis pressure
+        base_density = 1.0 + math.log1p(1) * 0.45
+        if N == 1:
+            density_multiplier = base_density
+        else:
+            density_multiplier = base_density * (1.0 + ((N - 1) ** 0.85) * 3.6)
         scaled_risk = raw_risk * density_multiplier
 
         # Strictly bounded [0.0, 100.0]

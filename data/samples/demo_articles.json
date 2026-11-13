@@ -130,5 +130,126 @@
     "author": "Special Defense Correspondent",
     "credibility": 0.88,
     "body_text": "Paramilitary and intelligence forces conducted dawn cordon-and-search operations across rugged frontier passes, intercepting an armed insurgent convoy carrying military-grade communications gear and munitions. Five militants were neutralized following an intense firefight. Security authorities ordered heightened vigil across transit routes."
+  },
+  {
+    "title": "Anti-Ship Ballistic Missiles Target Commercial Tankers Transiting Bab el-Mandeb Bottleneck",
+    "source_name": "Reuters Global Maritime Desk",
+    "source_url": "https://www.reuters.com/world/middle-east/red-sea-tanker-missile-strikes-2026",
+    "published_at": "2026-09-17T21:10:00Z",
+    "language": "en",
+    "country_hint": "YEM",
+    "author": "Maritime Security Correspondent",
+    "credibility": 0.96,
+    "body_text": "Coastal missile batteries launched anti-ship ballistic missiles and explosive loitering drones toward commercial chemical tankers navigating the Bab el-Mandeb Strait. Allied naval destroyers intercepted three incoming projectiles using Aegis air defense systems. Leading shipping syndicates announced immediate cargo suspensions through the Suez corridor, redirecting global oil freight around Africa."
+  },
+  {
+    "title": "Unmanned Surface Vessels Intercepted Approaching Southern Red Sea Shipping Corridors",
+    "source_name": "Associated Press",
+    "source_url": "https://apnews.com/article/red-sea-drone-boats-interception-2026",
+    "published_at": "2026-09-17T17:40:00Z",
+    "language": "en",
+    "country_hint": "YEM",
+    "author": "AP Naval Correspondent",
+    "credibility": 0.94,
+    "body_text": "Naval patrol helicopters neutralized two autonomous explosive surface vessels detected stalking commercial container traffic five nautical miles off the Yemeni coastline. Coast guards issued critical flash warnings advising all merchant vessels to maintain maximum speed and radio silence across high-risk littoral coordinates."
+  },
+  {
+    "title": "Coordinated Hypersonic Missile Strikes Devastate Regional Energy Transmission Networks",
+    "source_name": "Agence France-Presse",
+    "source_url": "https://www.afp.com/en/news/ukraine-hypersonic-grid-strikes-2026",
+    "published_at": "2026-09-17T22:00:00Z",
+    "language": "en",
+    "country_hint": "UKR",
+    "author": "AFP Kyiv Bureau",
+    "credibility": 0.95,
+    "body_text": "Intensive waves of hypersonic cruise missiles and swarm drones struck thermal power stations, substation switches, and railway logistics lines across central and eastern provinces. Emergency municipal responders initiated rolling blackouts affecting millions of civilians as defense forces urgently requested replenishment of surface-to-air interceptors from allied capitals."
+  },
+  {
+    "title": "Frontline Defense Lines Repel Mechanized Breakthrough Attempts Amid Sustained Artillery Barrages",
+    "source_name": "BBC World News",
+    "source_url": "https://www.bbc.com/news/world-europe-frontline-mechanized-assault-2026",
+    "published_at": "2026-09-17T19:25:00Z",
+    "language": "en",
+    "country_hint": "UKR",
+    "author": "Defense Correspondent",
+    "credibility": 0.95,
+    "body_text": "Infantry brigades repelled waves of armored breakthrough assaults backed by heavy glide-bomb strikes along eastern defensive bastions. Over ninety combat engagements were recorded within twenty-four hours. Field commanders confirmed severe structural devastation across logistical transit hubs and deployed reserve anti-tank units to contain flanking incursions."
+  },
+  {
+    "title": "Comprehensive Maritime Blockade Drills Encircle Northern and Southern Taiwan Strait Approaches",
+    "source_name": "Nikkei Asia",
+    "source_url": "https://asia.nikkei.com/Politics/Taiwan-Strait-encirclement-naval-drills-2026",
+    "published_at": "2026-09-17T15:00:00Z",
+    "language": "en",
+    "country_hint": "TWN",
+    "author": "Regional Security Editor",
+    "credibility": 0.93,
+    "body_text": "Dozens of missile frigates, nuclear attack submarines, and electronic warfare aircraft carried out joint multi-domain blockade simulations sealing vital maritime access corridors into Keelung and Kaohsiung ports. Defense analysts warned that prolonged quarantine exercises disrupt commercial container lanes carrying over twenty percent of international container trade."
+  },
+  {
+    "title": "Fast Attack Gunboats Conduct High-Speed Interception Drills in Strategic Strait of Hormuz",
+    "source_name": "Al Arabiya English",
+    "source_url": "https://english.alarabiya.net/news/gulf-tanker-interception-drills-2026",
+    "published_at": "2026-09-16T19:00:00Z",
+    "language": "en",
+    "country_hint": "IRN",
+    "author": "Gulf Defense Desk",
+    "credibility": 0.91,
+    "body_text": "Naval speedboats equipped with anti-ship missile launchers swarmed within close proximity of foreign crude tankers navigating international transit lanes in the Strait of Hormuz. Revolutionary Guard spokespersons asserted sovereign authority to inspect maritime vessels suspected of violating ecological regulations, elevating tensions across global energy markets."
+  },
+  {
+    "title": "Heavy Artillery and Paramilitary Clashes Disrupt Humanitarian Relief Corridors in Khartoum",
+    "source_name": "Al Jazeera English",
+    "source_url": "https://www.aljazeera.com/news/sudan-khartoum-artillery-clashes-2026",
+    "published_at": "2026-09-17T11:20:00Z",
+    "language": "en",
+    "country_hint": "SDN",
+    "author": "East Africa Bureau",
+    "credibility": 0.93,
+    "body_text": "Fierce urban battles, heavy mortar shelling, and drone bombardments erupted across residential and airport perimeters, crippling critical hospital services and forcing the suspension of international emergency food convoys. Humanitarian leaders warned of catastrophic famine and mass displacement across neighboring borders."
+  },
+  {
+    "title": "Coast Guard Cutters Confront High-Pressure Water Cannons in Disputed Second Thomas Shoal Waters",
+    "source_name": "Rappler News",
+    "source_url": "https://www.rappler.com/nation/second-thomas-shoal-coast-guard-collision-2026",
+    "published_at": "2026-09-17T06:30:00Z",
+    "language": "en",
+    "country_hint": "PHL",
+    "author": "Maritime Affairs Desk",
+    "credibility": 0.90,
+    "body_text": "Coast guard resupply vessels sustained structural cabin damage after facing simultaneous high-pressure water cannons and aggressive flanking maneuvers by foreign maritime militia cutters near the Sierra Madre garrison. Diplomatic protests were lodged calling for respect of the 2016 Permanent Court of Arbitration ruling."
+  },
+  {
+    "title": "Cross-Border Rocket Volleys and Interceptor Air Battles Escalate Along Northern Border",
+    "source_name": "The Times of Israel",
+    "source_url": "https://www.timesofisrael.com/northern-border-rocket-barrages-interceptors-2026",
+    "published_at": "2026-09-17T16:45:00Z",
+    "language": "en",
+    "country_hint": "ISR",
+    "author": "Military Correspondent",
+    "credibility": 0.94,
+    "body_text": "Iron Dome batteries intercepted swarms of heavy Katyusha rockets and precision-guided anti-tank missiles launched from southern ridge lines. Retaliatory fighter jet strikes struck command centers and weapons depots. Civilian civil defense authorities ordered communities within twenty kilometers of the frontier into fortified bomb shelters."
+  },
+  {
+    "title": "Solid-Fuel Ballistic Missile Launches Detected into Maritime Buffer Zone",
+    "source_name": "Yonhap News Agency",
+    "source_url": "https://en.yna.co.kr/view/ballistic-missile-launch-alert-2026",
+    "published_at": "2026-09-17T05:15:00Z",
+    "language": "en",
+    "country_hint": "KOR",
+    "author": "Defense News Bureau",
+    "credibility": 0.93,
+    "body_text": "Joint Chiefs of Staff reported multiple test firings of road-mobile solid-fuel intermediate-range ballistic missiles reaching apogees of six hundred kilometers before impacting the East Sea. Military headquarters convened emergency contingency sessions with regional commanders to review bilateral extended deterrence postures."
+  },
+  {
+    "title": "Regional Maritime Task Force Accelerates Anti-Piracy and Chokepoint Escorts in Malacca Strait",
+    "source_name": "The Straits Times",
+    "source_url": "https://www.straitstimes.com/singapore/malacca-strait-naval-patrols-chokepoint-2026",
+    "published_at": "2026-09-16T14:00:00Z",
+    "language": "en",
+    "country_hint": "SGP",
+    "author": "Maritime Security Correspondent",
+    "credibility": 0.95,
+    "body_text": "Littoral defense forces deployed coordinated aerial surveillance patrols and radar-guided interceptor craft along narrow channels of the Singapore and Malacca straits. The joint naval operations center reaffirmed that secure transit through the conduit, which carries one-third of global ocean trade and eighty percent of East Asian oil imports, remains an indispensable international imperative."
   }
 ]

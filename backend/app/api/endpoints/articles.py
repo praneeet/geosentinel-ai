@@ -1,9 +1,10 @@
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import select, func
+from sqlalchemy import select, func, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.database.session import get_db
 from app.models.article import Article
+from app.models.event import Event
 from app.schemas.article import ArticleResponse, ArticleListResponse
 
 router = APIRouter()
@@ -18,11 +19,19 @@ async def list_articles(
 ):
     offset = (page - 1) * page_size
     query = select(Article)
-    count_query = select(func.count(Article.article_id))
+    count_query = select(func.count(func.distinct(Article.article_id)))
 
     if country_iso:
-        query = query.where(Article.country_hint == country_iso.upper())
-        count_query = count_query.where(Article.country_hint == country_iso.upper())
+        c_upper = country_iso.upper()
+        query = (
+            query.outerjoin(Event, Article.article_id == Event.article_id)
+            .where(or_(Article.country_hint == c_upper, Event.country_iso == c_upper))
+            .distinct()
+        )
+        count_query = (
+            count_query.outerjoin(Event, Article.article_id == Event.article_id)
+            .where(or_(Article.country_hint == c_upper, Event.country_iso == c_upper))
+        )
 
     if dedup_type:
         query = query.where(Article.dedup_type == dedup_type)

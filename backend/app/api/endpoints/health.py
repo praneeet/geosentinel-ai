@@ -19,11 +19,12 @@ async def health_check(db: AsyncSession = Depends(get_db)):
 
     return {
         "status": "healthy" if db_status == "ok" else "degraded",
-        "project": settings.PROJECT_NAME,
+        "project": "GeoSentinel AI",
+        "platform": settings.PROJECT_NAME,
         "full_title": settings.FULL_TITLE,
-        "institution": settings.INSTITUTION,
-        "department": settings.DEPARTMENT,
-        "project_group": settings.PROJECT_GROUP,
+        "organization": settings.INSTITUTION,
+        "division": settings.DEPARTMENT,
+        "edition": settings.PROJECT_GROUP,
         "version": settings.VERSION,
         "environment": settings.ENVIRONMENT,
         "demo_mode": settings.DEMO_MODE,

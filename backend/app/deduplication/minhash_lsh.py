@@ -84,23 +84,48 @@ class MinHashLSHDeduplicator:
         if self._lsh is not None:
             m = self._compute_minhash(shingles)
             if m is not None:
-                # Check candidate matches via LSH and active window signatures
-                for candidate_id, (_, candidate_m, _) in self._signatures.items():
-                    if candidate_id == article_id or candidate_m is None:
-                        continue
-                    sim = m.jaccard(candidate_m)
-                    if sim >= self.threshold:
-                        return "near_duplicate", candidate_id, float(sim)
+                # 1. Efficient candidate lookup via LSH hash buckets (O(1))
+                try:
+                    candidates = self._lsh.query(m)
+                except Exception:
+                    candidates = []
 
-                # If unique, insert into index and signature store
+                best_sim = 0.0
+                best_candidate = None
+
+                for candidate_id in candidates:
+                    if candidate_id == article_id:
+                        continue
+                    if candidate_id in self._signatures:
+                        _, candidate_m, _ = self._signatures[candidate_id]
+                        if candidate_m is not None:
+                            sim = m.jaccard(candidate_m)
+                            if sim > best_sim:
+                                best_sim = sim
+                                best_candidate = candidate_id
+
+                # If threshold satisfied, return as near-duplicate
+                if best_sim >= self.threshold and best_candidate:
+                    return "near_duplicate", best_candidate, float(best_sim)
+
+                # Fallback check against recent window signatures if LSH bucket missed boundary
+                if not best_candidate:
+                    for candidate_id, (_, candidate_m, _) in self._signatures.items():
+                        if candidate_id == article_id or candidate_m is None:
+                            continue
+                        sim = m.jaccard(candidate_m)
+                        if sim >= self.threshold:
+                            return "near_duplicate", candidate_id, float(sim)
+
+                # Unique: insert into LSH index and store signature
                 try:
                     self._lsh.insert(article_id, m)
                 except Exception:
                     pass
                 self._signatures[article_id] = (timestamp, m, shingles)
-                return "unique", None, 0.0
+                return "unique", None, float(best_sim)
 
-        # Fallback pure-Python Jaccard if datasketch not yet loaded
+        # Fallback pure-Python Jaccard if datasketch is not available
         max_sim = 0.0
         best_match = None
         for candidate_id, (_, _, cand_shingles) in self._signatures.items():

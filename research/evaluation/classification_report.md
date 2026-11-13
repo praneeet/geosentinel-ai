@@ -4,12 +4,13 @@
 - **Institution**: Ajay Kumar Garg Engineering College, Ghaziabad
 - **Department**: Information Technology
 - **Project Group**: 2023-27 / CSIT-2 / GROUP-32
-- **Architecture**: DistilBERT Base Sequence Classifier Head / TF-IDF N-Gram Baseline
-- **Target Target Metric**: Macro F1 $\ge 0.85$
+- **Architecture**: DistilBERT Base Sequence Classifier Head / TF-IDF N-Gram Logistic Baseline
+- **Target Metric**: Macro F1 $\ge 0.85$
 
 ## Measured Results (Holdout Test Split)
 - **Accuracy**: 100.00%
-- **Macro F1 Score**: 1.0000
+- **Macro F1 Score**: 1.0000 (Target: $\ge 0.85$)
+- **Validation Status**: **Target Met**
 
 ### Detailed Category Breakdown
 ```
@@ -36,4 +37,4 @@ Labels: `[CONFLICT, SECURITY, ECONOMY, DIPLOMACY]`
 ```
 
 ## Reproducibility Note
-This report is generated directly by `ml/classification/train_classifier.py` without data synthesis or fabricated performance numbers.
+This report and model artifact are generated directly by `ml/classification/train_classifier.py`. The model is saved to `backend/app/nlp/classifier_model.joblib` and hot-loaded by the backend NLP pipeline.

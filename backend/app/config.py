@@ -1,22 +1,23 @@
+import os
 import math
 from typing import List, Dict
 from pydantic_settings import BaseSettings
 from pydantic import Field
 
 class Settings(BaseSettings):
-    PROJECT_NAME: str = "GeoSentinel AI"
-    FULL_TITLE: str = "GeoSentinel AI: AI-Powered Global Geopolitical Risk Intelligence & Forecasting Platform"
-    INSTITUTION: str = "Ajay Kumar Garg Engineering College, Ghaziabad"
-    DEPARTMENT: str = "Information Technology"
-    PROJECT_GROUP: str = "2023-27 / CSIT-2 / GROUP-32"
-    VERSION: str = "1.0.0"
+    PROJECT_NAME: str = "GeoSentinel Enterprise"
+    FULL_TITLE: str = "GeoSentinel Enterprise: Global Geopolitical Threat Intelligence & Asset Defense Platform"
+    INSTITUTION: str = "GeoSentinel Global Intelligence Services (GIS)"
+    DEPARTMENT: str = "Global Threat Operations Center (GTOC)"
+    PROJECT_GROUP: str = "Enterprise Edition v2.4"
+    VERSION: str = "2.4.0"
     API_V1_STR: str = "/api"
     ENVIRONMENT: str = "development"
     DEBUG: bool = True
     SECRET_KEY: str = "geosentinel-secret-key-super-secure-change-in-prod"
 
-    # Database
-    DATABASE_URL: str = "sqlite+aiosqlite:///./geosentinel.db"
+    # Database - Canonical project root SQLite path
+    DATABASE_URL: str = f"sqlite+aiosqlite:///{os.path.abspath(os.path.join(os.path.dirname(__file__), '../../geosentinel.db')).replace(chr(92), '/')}"
 
     # Redis & Celery
     REDIS_URL: str = "redis://localhost:6379/0"
@@ -54,6 +55,16 @@ class Settings(BaseSettings):
     MINHASH_PERMUTATIONS: int = 128
     LSH_THRESHOLD: float = 0.82
     DEDUP_WINDOW_HOURS: int = 48
+
+    # Webhook Alert Dispatching (Discord & Telegram)
+    DISCORD_WEBHOOK_URL: str = ""
+    TELEGRAM_BOT_TOKEN: str = ""
+    TELEGRAM_CHAT_ID: str = ""
+    WEBHOOKS_ENABLED: bool = True
+    FRONTEND_URL: str = "http://localhost:5173"
+
+    # Background scheduler execution (standalone mode vs Celery worker)
+    ENABLE_IN_APP_SCHEDULER: bool = True
 
     # CORS
     CORS_ORIGINS: List[str] = [

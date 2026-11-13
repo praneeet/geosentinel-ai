@@ -1,3 +1,4 @@
+import json
 from typing import Dict, Any, List
 
 def format_risk_explanation(country_name: str, risk_data: Dict[str, Any], event_details: List[Dict[str, Any]] = None) -> Dict[str, Any]:
@@ -5,6 +6,13 @@ def format_risk_explanation(country_name: str, risk_data: Dict[str, Any], event_
     Generates a transparent, auditable breakdown of a country's risk score.
     """
     factors = risk_data.get("contributing_factors", {})
+    if isinstance(factors, str):
+        try:
+            factors = json.loads(factors)
+        except Exception:
+            factors = {}
+    if not isinstance(factors, dict):
+        factors = {}
     risk_index = risk_data.get("risk_index", 0.0)
     risk_tier = risk_data.get("risk_tier", "Low")
     event_count = risk_data.get("event_count", 0)

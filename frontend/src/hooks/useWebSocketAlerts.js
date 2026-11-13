@@ -1,6 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 
-const WS_BASE = import.meta.env.VITE_WS_URL || "ws://localhost:8000/ws/alerts";
+const WS_BASE =
+  import.meta.env.VITE_WS_URL ||
+  (typeof window !== "undefined" && window.location.host
+    ? `${window.location.protocol === "https:" ? "wss:" : "ws:"}//${window.location.host}/ws/alerts`
+    : "ws://localhost:8000/ws/alerts");
 
 export function useWebSocketAlerts(onAlertReceived) {
   const [isConnected, setIsConnected] = useState(false);

@@ -67,3 +67,5 @@ ml/models/*.safetensors
 # Reports / Cache
 backend/.cache/
 scratch/
+*.zip
+GEOSENTINEL_CODEBASE_DIGEST.md

@@ -1,0 +1,121 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: geosentinel-prod-db
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-geosentinel_admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set strong POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-geosentinel_production}
+    volumes:
+      - postgres_prod_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-geosentinel_admin} -d ${POSTGRES_DB:-geosentinel_production}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2048M
+
+  redis:
+    image: redis:7-alpine
+    container_name: geosentinel-prod-redis
+    restart: always
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD:-geosentinel_redis_pass}"]
+    volumes:
+      - redis_prod_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-geosentinel_redis_pass}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.prod
+    container_name: geosentinel-prod-api
+    restart: always
+    environment:
+      - ENVIRONMENT=production
+      - DEBUG=False
+      - SECRET_KEY=${SECRET_KEY:?Set strong SECRET_KEY in .env}
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-geosentinel_admin}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-geosentinel_production}
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-geosentinel_redis_pass}@redis:6379/0
+      - CELERY_BROKER_URL=redis://:${REDIS_PASSWORD:-geosentinel_redis_pass}@redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://:${REDIS_PASSWORD:-geosentinel_redis_pass}@redis:6379/0
+      - DEMO_MODE=False
+      - NEWSAPI_KEY=${NEWSAPI_KEY:-}
+      - MEDIASTACK_KEY=${MEDIASTACK_KEY:-}
+      - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL:-}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2048M
+
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.prod
+    container_name: geosentinel-prod-worker
+    restart: always
+    command: ["celery", "-A", "app.services.tasks", "worker", "--beat", "--loglevel=info", "--concurrency=2"]
+    environment:
+      - ENVIRONMENT=production
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-geosentinel_admin}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-geosentinel_production}
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-geosentinel_redis_pass}@redis:6379/0
+      - CELERY_BROKER_URL=redis://:${REDIS_PASSWORD:-geosentinel_redis_pass}@redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://:${REDIS_PASSWORD:-geosentinel_redis_pass}@redis:6379/0
+      - DEMO_MODE=False
+      - NEWSAPI_KEY=${NEWSAPI_KEY:-}
+      - MEDIASTACK_KEY=${MEDIASTACK_KEY:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: "1.5"
+          memory: 1536M
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.prod
+    container_name: geosentinel-prod-ui
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - backend
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+
+volumes:
+  postgres_prod_data:
+  redis_prod_data:
+

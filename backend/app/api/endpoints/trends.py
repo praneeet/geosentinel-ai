@@ -32,15 +32,37 @@ async def get_global_trends(days: int = Query(30, ge=7, le=90), db: AsyncSession
     sent_res = await db.execute(sent_stmt)
     avg_sent = sent_res.scalar() or -0.15
 
-    # Daily timeline
+    # Daily timeline from real database events
+    ev_stmt = select(Event.timestamp, Event.sentiment).where(Event.timestamp >= cutoff)
+    ev_res = await db.execute(ev_stmt)
+    real_days = {}
+    for ts, sent in ev_res.all():
+        if not ts:
+            continue
+        date_str = ts.strftime("%Y-%m-%d") if hasattr(ts, "strftime") else str(ts)[:10]
+        if date_str not in real_days:
+            real_days[date_str] = {"count": 0, "sent_sum": 0.0}
+        real_days[date_str]["count"] += 1
+        real_days[date_str]["sent_sum"] += (sent if sent is not None else avg_sent)
+
     timeline = []
     for d in range(days, 0, -1):
         dt = now - timedelta(days=d)
-        timeline.append({
-            "date": dt.strftime("%Y-%m-%d"),
-            "events": max(1, (d * 7) % 15 + 2),
-            "sentiment": round(-0.10 - ((d % 5) * 0.04), 2),
-        })
+        date_str = dt.strftime("%Y-%m-%d")
+        if date_str in real_days and real_days[date_str]["count"] > 0:
+            c = real_days[date_str]["count"]
+            s = real_days[date_str]["sent_sum"] / c
+            timeline.append({
+                "date": date_str,
+                "events": c,
+                "sentiment": round(s, 2),
+            })
+        else:
+            timeline.append({
+                "date": date_str,
+                "events": 0,
+                "sentiment": round(avg_sent, 2),
+            })
 
     return {
         "observation_window_days": days,

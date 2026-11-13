@@ -92,6 +92,20 @@ class AlertManager:
         await ws_dispatcher.broadcast_alert(alert_payload)
         logger.info(f"Dispatched critical alert for {country_iso} (Risk: {risk_score})")
 
+        # Broadcast via Discord & Telegram External Webhooks
+        try:
+            from app.alerts.webhooks import webhook_dispatcher
+            dominant = top_contribs[0]["category"].upper() if top_contribs else "CONFLICT"
+            await webhook_dispatcher.dispatch_critical_alert({
+                "country_iso": country_iso,
+                "risk_score": float(risk_score),
+                "dominant_factor": dominant,
+                "headline": f"Critical risk threshold breached in {country_name} ({country_iso}) with index {risk_score:.1f}/100.",
+                "alert_id": alert_obj.alert_id,
+            })
+        except Exception as e:
+            logger.warning(f"Webhook dispatch error: {e}")
+
         return alert_payload
 
 alert_manager = AlertManager()

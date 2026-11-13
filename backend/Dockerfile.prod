@@ -1,0 +1,38 @@
+# ==========================================
+# GeoSentinel Enterprise - Production Backend Container
+# Multi-stage security-hardened non-root image
+# ==========================================
+FROM python:3.11-slim AS base
+
+WORKDIR /app
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    ENVIRONMENT=production
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    curl \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
+
+# Download NLP models
+RUN python -m spacy download en_core_web_sm || true
+
+COPY . .
+
+# Security: Run as non-root unprivileged service account
+RUN useradd -m -u 10001 appuser && \
+    chown -R appuser:appuser /app
+
+USER appuser
+
+EXPOSE 8000
+
+# Production: Gunicorn process supervisor with 4 Uvicorn async workers
+CMD ["gunicorn", "app.main:app", "-w", "4", "-k", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:8000", "--timeout", "120", "--access-logfile", "-", "--error-logfile", "-"]
+
