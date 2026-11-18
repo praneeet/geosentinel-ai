@@ -17,18 +17,6 @@ services:
       timeout: 5s
       retries: 5
 
-  redis:
-    image: redis:7-alpine
-    container_name: geosentinel-redis
-    restart: unless-stopped
-    ports:
-      - "6379:6379"
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
   backend:
     build:
       context: ./backend
@@ -43,37 +31,16 @@ services:
       - "8000:8000"
     environment:
       - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-geosentinel}:${POSTGRES_PASSWORD:-geosentinel_secure_pass}@postgres:5432/${POSTGRES_DB:-geosentinel_db}
-      - REDIS_URL=redis://redis:6379/0
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - ENABLE_IN_APP_SCHEDULER=true
       - DEMO_MODE=${DEMO_MODE:-true}
       - NEWSAPI_KEY=${NEWSAPI_KEY:-}
       - MEDIASTACK_KEY=${MEDIASTACK_KEY:-}
+      - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL:-}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID:-}
+      - WEBHOOKS_ENABLED=${WEBHOOKS_ENABLED:-false}
     depends_on:
       postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-
-  worker:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: geosentinel-worker
-    restart: unless-stopped
-    command: celery -A app.services.tasks worker --loglevel=info
-    volumes:
-      - ./backend:/app
-      - ./data:/data
-    environment:
-      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-geosentinel}:${POSTGRES_PASSWORD:-geosentinel_secure_pass}@postgres:5432/${POSTGRES_DB:-geosentinel_db}
-      - REDIS_URL=redis://redis:6379/0
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://redis:6379/0
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
         condition: service_healthy
 
   frontend:

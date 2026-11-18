@@ -41,3 +41,18 @@ def test_forecasting_engine_bounds_extremes():
     for point in forecast_low:
         assert point["forecast_risk"] >= 0.0
         assert point["lower_bound"] >= 0.0
+
+
+def test_holt_damped_forecaster_mathematical_guarantees():
+    """Verify Holt's linear trend with additive damping bounds and widening uncertainty."""
+    forecaster = ForecastingEngine(alpha=0.35, beta=0.20, phi=0.88)
+    history = [10.0, 12.0, 14.0, 16.0, 18.0, 20.0]
+    forecast = forecaster.generate_forecast(current_risk=22.0, history_points=history, days=7)
+
+    assert len(forecast) == 7
+    assert forecast[0]["forecast_risk"] > 22.0
+
+    for i in range(1, len(forecast)):
+        spread_curr = forecast[i]["upper_bound"] - forecast[i]["lower_bound"]
+        spread_prev = forecast[i - 1]["upper_bound"] - forecast[i - 1]["lower_bound"]
+        assert spread_curr >= spread_prev

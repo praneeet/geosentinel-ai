@@ -7,35 +7,15 @@ const API_BASE =
 export async function apiRequest(endpoint, options = {}) {
   const url = `${API_BASE}${endpoint}`;
   try {
-    const token = typeof localStorage !== "undefined" ? localStorage.getItem("geosentinel_token") : null;
     const res = await fetch(url, {
       headers: {
         "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...options.headers,
       },
       ...options,
     });
     if (!res.ok) {
       const errBody = await res.json().catch(() => ({}));
-      // Transparently re-authenticate as Admin on 401 or 403 so user never gets blocked
-      if ((res.status === 401 || res.status === 403) && !options._retried) {
-        try {
-          const authData = await api.login("admin", "admin123");
-          if (authData?.access_token) {
-            return await apiRequest(endpoint, {
-              ...options,
-              _retried: true,
-              headers: {
-                ...options.headers,
-                Authorization: `Bearer ${authData.access_token}`,
-              },
-            });
-          }
-        } catch (authErr) {
-          console.warn("Auto-reauth note:", authErr);
-        }
-      }
       throw new Error(errBody.detail || `Request failed with status ${res.status}`);
     }
     return await res.json();
@@ -68,62 +48,9 @@ export const api = {
     return apiRequest(`/events${query}`);
   },
   getAlerts: (limit = 20) => apiRequest(`/alerts?limit=${limit}`),
+  getWebhookStatus: () => apiRequest("/alerts/webhooks/status"),
   runIngestion: () => apiRequest("/ingestion/run", { method: "POST" }),
-  generateReport: (countryIso) => apiRequest("/reports/generate", {
-    method: "POST",
-    body: JSON.stringify({ country_iso: countryIso }),
-  }),
-  getSimulationTemplates: () => apiRequest("/simulation/templates"),
-  runSimulation: (payload) => apiRequest("/simulation/run", {
-    method: "POST",
-    body: JSON.stringify(payload),
-  }),
-  askChatCopilot: (query, countryIso = null) => apiRequest("/chat", {
-    method: "POST",
-    body: JSON.stringify({ query, context_country_iso: countryIso }),
-  }),
-
   getRiskGeoJSON: () => apiRequest("/risk/export/geojson"),
-  getEventsCSVUrl: (countryIso = "") => `${API_BASE}/events/export/csv${countryIso ? `?country_iso=${countryIso}` : ""}`,
-
-  // Enterprise Corporate Asset & Geofencing APIs
-  getAssets: () => apiRequest("/assets"),
-  createAsset: (payload) => apiRequest("/assets", {
-    method: "POST",
-    body: JSON.stringify(payload),
-  }),
-  deleteAsset: (assetId) => apiRequest(`/assets/${assetId}`, { method: "DELETE" }),
-  getAssetThreatDetail: (assetId) => apiRequest(`/assets/${assetId}/threat-assessment`),
-
-  // Prescriptive Operational Mitigation Playbooks
-  getPlaybooks: () => apiRequest("/playbooks"),
-  getPlaybook: (playbookId) => apiRequest(`/playbooks/${playbookId}`),
-
-  // Authentication & RBAC
-  login: async (username, password) => {
-    const formData = new URLSearchParams();
-    formData.append("username", username);
-    formData.append("password", password);
-    const res = await fetch(`${API_BASE}/auth/token`, {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: formData.toString(),
-    });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.detail || "Authentication failed");
-    }
-    const data = await res.json();
-    if (data.access_token && typeof localStorage !== "undefined") {
-      localStorage.setItem("geosentinel_token", data.access_token);
-    }
-    return data;
-  },
-  logout: () => {
-    if (typeof localStorage !== "undefined") {
-      localStorage.removeItem("geosentinel_token");
-    }
-  },
-  getCurrentUser: () => apiRequest("/auth/me"),
-  getRoles: () => apiRequest("/auth/roles"),
+  getEventsCSVUrl: (countryIso = "") =>
+    `${API_BASE}/events/export/csv${countryIso ? `?country_iso=${countryIso}` : ""}`,
 };

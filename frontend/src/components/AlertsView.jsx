@@ -1,17 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   ShieldAlert,
-  Radio,
-  ExternalLink,
-  Calendar,
   Send,
   Eye,
   CheckCircle2,
-  Filter,
+  XCircle,
   MessageSquare,
-  Bot,
   RefreshCw,
 } from 'lucide-react';
+import { api } from '../api/client';
 
 export default function AlertsView({
   alerts = [],
@@ -20,12 +17,27 @@ export default function AlertsView({
   isIngesting,
 }) {
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterSeverity, setFilterSeverity] = useState('ALL');
+  const [webhookStatus, setWebhookStatus] = useState({
+    webhooks_enabled: false,
+    discord_configured: false,
+    telegram_configured: false,
+  });
+
+  useEffect(() => {
+    api.getWebhookStatus()
+      .then((data) => {
+        if (data) setWebhookStatus(data);
+      })
+      .catch((err) => console.error('Error fetching webhook status:', err));
+  }, []);
+
+  const discordActive = webhookStatus.webhooks_enabled && webhookStatus.discord_configured;
+  const telegramActive = webhookStatus.webhooks_enabled && webhookStatus.telegram_configured;
+  const anyWebhookActive = discordActive || telegramActive;
 
   const filteredAlerts = alerts.filter((a) => {
     const cName = (a.country_iso || a.country || '').toLowerCase();
-    const matchesSearch = !searchTerm || cName.includes(searchTerm.toLowerCase());
-    return matchesSearch;
+    return !searchTerm || cName.includes(searchTerm.toLowerCase());
   });
 
   return (
@@ -40,14 +52,18 @@ export default function AlertsView({
             </h2>
           </div>
           <p className="text-xs text-slate-400 font-sans">
-            Real-Time Push Dispatches to Discord Webhook and Telegram Bot Channels
+            Real-time WebSocket alerts with optional Discord and Telegram webhook notifications
           </p>
         </div>
 
         <div className="flex items-center gap-2.5">
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#0D1422] border border-slate-800 text-xs font-mono text-slate-300">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span>Webhooks Active</span>
+            <span
+              className={`w-2 h-2 rounded-full ${
+                anyWebhookActive ? 'bg-emerald-400 animate-pulse' : 'bg-slate-500'
+              }`}
+            ></span>
+            <span>{anyWebhookActive ? 'Webhooks Active' : 'Webhooks Disabled'}</span>
           </div>
 
           <button
@@ -56,12 +72,12 @@ export default function AlertsView({
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-sky-500/15 hover:bg-sky-500/25 border border-sky-500/30 text-sky-300 text-xs font-mono font-semibold transition-colors disabled:opacity-50"
           >
             <RefreshCw className={`w-3.5 h-3.5 text-sky-400 ${isIngesting ? 'animate-spin' : ''}`} />
-            <span>{isIngesting ? 'Testing Webhooks...' : 'Simulate Feed Run'}</span>
+            <span>{isIngesting ? 'Running Feed...' : 'Run Ingestion'}</span>
           </button>
         </div>
       </div>
 
-      {/* Integration Status Cards */}
+      {/* Integration Status Cards (Real Runtime Config) */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Discord Card */}
         <div className="bg-[#111C2D] p-4 rounded-xl border border-slate-800/80 flex items-center justify-between">
@@ -70,14 +86,25 @@ export default function AlertsView({
               <MessageSquare className="w-5 h-5" />
             </div>
             <div>
-              <div className="font-mono font-bold text-xs text-slate-100">Discord Tactical Webhook</div>
-              <div className="text-[11px] text-slate-400">#geosentinel-flash-alerts channel</div>
+              <div className="font-mono font-bold text-xs text-slate-100">Discord Webhook</div>
+              <div className="text-[11px] text-slate-400">
+                {discordActive
+                  ? 'Configured via DISCORD_WEBHOOK_URL'
+                  : 'Set DISCORD_WEBHOOK_URL & WEBHOOKS_ENABLED=true in .env'}
+              </div>
             </div>
           </div>
-          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-emerald-950/60 text-emerald-400 border border-emerald-800/40">
-            <CheckCircle2 className="w-3 h-3" />
-            <span>CONNECTED</span>
-          </div>
+          {discordActive ? (
+            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-emerald-950/60 text-emerald-400 border border-emerald-800/40 shrink-0">
+              <CheckCircle2 className="w-3 h-3" />
+              <span>CONFIGURED</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-slate-900 text-slate-400 border border-slate-700 shrink-0">
+              <XCircle className="w-3 h-3" />
+              <span>NOT CONFIGURED</span>
+            </div>
+          )}
         </div>
 
         {/* Telegram Card */}
@@ -88,13 +115,24 @@ export default function AlertsView({
             </div>
             <div>
               <div className="font-mono font-bold text-xs text-slate-100">Telegram Bot Channel</div>
-              <div className="text-[11px] text-slate-400">@GeoSentinelAI_bot (HTML Formatted)</div>
+              <div className="text-[11px] text-slate-400">
+                {telegramActive
+                  ? 'Configured via TELEGRAM_BOT_TOKEN & TELEGRAM_CHAT_ID'
+                  : 'Set TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID & WEBHOOKS_ENABLED=true in .env'}
+              </div>
             </div>
           </div>
-          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-emerald-950/60 text-emerald-400 border border-emerald-800/40">
-            <CheckCircle2 className="w-3 h-3" />
-            <span>CONNECTED</span>
-          </div>
+          {telegramActive ? (
+            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-emerald-950/60 text-emerald-400 border border-emerald-800/40 shrink-0">
+              <CheckCircle2 className="w-3 h-3" />
+              <span>CONFIGURED</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-slate-900 text-slate-400 border border-slate-700 shrink-0">
+              <XCircle className="w-3 h-3" />
+              <span>NOT CONFIGURED</span>
+            </div>
+          )}
         </div>
       </div>
 
@@ -140,7 +178,7 @@ export default function AlertsView({
                     Sovereign risk calculation exceeded critical threshold with composite value of{' '}
                     <strong className="text-rose-400 font-mono">
                       {Number(item.risk_score).toFixed(1)} / 100
-                    </strong>. Flash telemetry dispatched to all connected operators.
+                    </strong>.
                   </p>
                 </div>
 
@@ -161,4 +199,3 @@ export default function AlertsView({
     </div>
   );
 }
-

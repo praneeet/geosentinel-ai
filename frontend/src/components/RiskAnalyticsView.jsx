@@ -116,7 +116,7 @@ export default function RiskAnalyticsView({ countries = [], onSelectCountry }) {
               </div>
             </div>
             <div className="text-xs font-mono px-2 py-0.5 rounded bg-sky-500/10 text-sky-400 border border-sky-500/20">
-              Avg Sentiment: {trendData?.overall_average_sentiment ? Number(trendData.overall_average_sentiment).toFixed(2) : '-0.24'}
+              Avg Sentiment: {trendData?.average_sentiment !== undefined ? Number(trendData.average_sentiment).toFixed(2) : '0.00'}
             </div>
           </div>
 
@@ -151,7 +151,7 @@ export default function RiskAnalyticsView({ countries = [], onSelectCountry }) {
                 />
                 <Area
                   type="monotone"
-                  dataKey="event_count"
+                  dataKey="events"
                   name="Event Count"
                   stroke="#38BDF8"
                   strokeWidth={2}

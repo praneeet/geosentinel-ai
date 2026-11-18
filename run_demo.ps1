@@ -2,8 +2,8 @@
 # Enterprise Geopolitical Threat Intelligence & Asset Defense Suite
 
 Write-Host "`n========================================================" -ForegroundColor Cyan
-Write-Host "   GEOSENTINEL ENTERPRISE THREAT OPERATIONS CENTER (GTOC)" -ForegroundColor Yellow
-Write-Host "   Global Intelligence & Supply Chain Geofencing Platform" -ForegroundColor Cyan
+Write-Host "   GEOSENTINEL AI - GEOPOLITICAL THREAT INTELLIGENCE" -ForegroundColor Yellow
+Write-Host "   Explainable OSINT Deduplication & Country Risk Scoring" -ForegroundColor Cyan
 Write-Host "========================================================`n" -ForegroundColor Cyan
 
 $rootDir = Split-Path -Parent $MyInvocation.MyCommand.Path
@@ -45,10 +45,9 @@ Write-Host "[+] Opening GeoSentinel AI in browser..." -ForegroundColor Cyan
 Start-Process "http://localhost:5173"
 
 Write-Host "`n========================================================" -ForegroundColor Green
-Write-Host "   GEOSENTINEL ENTERPRISE GTOC COMMAND CENTER ONLINE" -ForegroundColor Green
+Write-Host "   GEOSENTINEL AI COMMAND CENTER ONLINE" -ForegroundColor Green
 Write-Host "   Backend API Docs : http://127.0.0.1:8000/docs" -ForegroundColor White
 Write-Host "   Frontend Console : http://localhost:5173" -ForegroundColor White
-Write-Host "   Active Geofences : Multi-tier corporate assets & chokepoints loaded" -ForegroundColor Cyan
 Write-Host "   Press [ENTER] or close this window to terminate services." -ForegroundColor Yellow
 Write-Host "========================================================`n" -ForegroundColor Green
 

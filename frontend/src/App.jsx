@@ -6,36 +6,21 @@ import WorldRiskMap from './components/WorldRiskMap';
 import RiskAnalyticsView from './components/RiskAnalyticsView';
 import NewsExplorer from './components/NewsExplorer';
 import AlertsView from './components/AlertsView';
-import AssetWatchlistPanel from './components/AssetWatchlistPanel';
-import ScenarioSimulatorModal from './components/ScenarioSimulatorModal';
-import TacticalPlaybookModal from './components/TacticalPlaybookModal';
-import SystemHealthModal from './components/SystemHealthModal';
 import CountryDetailsModal from './components/CountryDetailsModal';
-import DossierExportModal from './components/DossierExportModal';
-import AiAnalystDrawer from './components/AiAnalystDrawer';
 import AlertBanner from './components/AlertBanner';
 import { useWebSocketAlerts } from './hooks/useWebSocketAlerts';
 import { api } from './api/client';
-import { CheckCircle2, Bot } from 'lucide-react';
+import { CheckCircle2 } from 'lucide-react';
 
 export default function App() {
   const [currentView, setCurrentView] = useState('dashboard');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [countries, setCountries] = useState([]);
-  const [assets, setAssets] = useState([]);
   const [alertsHistory, setAlertsHistory] = useState([]);
   const [selectedIso, setSelectedIso] = useState(null);
-  const [dossierIso, setDossierIso] = useState(null);
-  const [isCopilotOpen, setIsCopilotOpen] = useState(false);
   const [activeLiveAlert, setActiveLiveAlert] = useState(null);
   const [isIngesting, setIsIngesting] = useState(false);
   const [ingestNotification, setIngestNotification] = useState(null);
-  const [activePlaybookId, setActivePlaybookId] = useState(null);
-
-  // Auto-authenticate as Admin on boot so user never encounters permission friction
-  useEffect(() => {
-    api.login('admin', 'admin123').catch((e) => console.warn('Admin auto-auth note:', e));
-  }, []);
 
   // WebSocket Live Alert listener
   const { isConnected: wsConnected } = useWebSocketAlerts((newAlert) => {
@@ -48,10 +33,6 @@ export default function App() {
     api.getRiskMap()
       .then((data) => setCountries(data || []))
       .catch((err) => console.error('Error loading map risk data:', err));
-
-    api.getAssets()
-      .then((data) => setAssets(data || []))
-      .catch((err) => console.error('Error loading corporate assets:', err));
 
     api.getAlerts(30)
       .then((data) => setAlertsHistory(data.alerts || []))
@@ -87,10 +68,6 @@ export default function App() {
     () => countries.filter((c) => c.risk_index > 60).length,
     [countries]
   );
-  const criticalAssetsCount = useMemo(
-    () => assets.filter((a) => a.threat_level === 'CRITICAL').length,
-    [assets]
-  );
   const avgRisk = useMemo(() => {
     if (countries.length === 0) return 0;
     const sum = countries.reduce((acc, c) => acc + (c.risk_index || 0), 0);
@@ -116,9 +93,7 @@ export default function App() {
         isCollapsed={isSidebarCollapsed}
         onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
         alertsCount={alertsHistory.length}
-        assetsCount={assets.length}
         wsConnected={wsConnected}
-        onOpenCopilot={() => setIsCopilotOpen(true)}
       />
 
       {/* Main Content Area (Offset by Sidebar Width) */}
@@ -133,14 +108,9 @@ export default function App() {
           wsConnected={wsConnected}
           isIngesting={isIngesting}
           onTriggerIngest={handleTriggerIngest}
-          onOpenCopilot={() => setIsCopilotOpen(true)}
           alerts={alertsHistory}
           countries={countries}
-          assets={assets}
           onSelectCountry={(iso) => setSelectedIso(iso)}
-          onSelectAsset={(asset) => {
-            if (asset?.country_iso) setSelectedIso(asset.country_iso);
-          }}
         />
 
         {/* Live Ingestion Toast Notification */}
@@ -162,21 +132,14 @@ export default function App() {
                 eventsCount={totalEvents}
                 severeCount={severeCountries}
                 alertCount={alertsHistory.length}
-                assetsCount={assets.length}
-                criticalAssetsCount={criticalAssetsCount}
                 avgRisk={avgRisk}
-                onOpenAssets={() => setCurrentView('assets')}
               />
 
               {/* Interactive World Risk Map */}
               <WorldRiskMap
                 countries={countries}
-                assets={assets}
                 selectedIso={selectedIso}
                 onSelectCountry={(iso) => setSelectedIso(iso)}
-                onSelectAsset={(asset) => {
-                  if (asset?.country_iso) setSelectedIso(asset.country_iso);
-                }}
               />
             </div>
           )}
@@ -200,7 +163,7 @@ export default function App() {
                     Real-Time Open-Source Intelligence (OSINT) News Wire
                   </h2>
                   <p className="text-xs text-slate-400 font-sans">
-                    Ingested from global news portals (BBC World News, Al Jazeera, UN News, Deutsche Welle, NewsAPI)
+                    Ingested from global news portals (BBC World News, Al Jazeera, UN News, Deutsche Welle, GDELT)
                   </p>
                 </div>
               </div>
@@ -219,53 +182,6 @@ export default function App() {
               />
             </div>
           )}
-
-          {/* VIEW: Corporate Asset Geofences Portfolio */}
-          {currentView === 'assets' && (
-            <div className="animate-fadeIn">
-              <AssetWatchlistPanel
-                assets={assets}
-                isInline={true}
-                onRefreshAssets={loadDashboardData}
-                onSelectAsset={(asset) => {
-                  if (asset?.country_iso) setSelectedIso(asset.country_iso);
-                }}
-                onOpenPlaybook={(asset) => {
-                  setCurrentView('playbooks');
-                }}
-              />
-            </div>
-          )}
-
-          {/* VIEW: What-If Scenario Simulation Sandbox */}
-          {currentView === 'simulation' && (
-            <div className="animate-fadeIn">
-              <ScenarioSimulatorModal
-                isInline={true}
-                countries={countries}
-              />
-            </div>
-          )}
-
-          {/* VIEW: Action Mitigation Playbooks */}
-          {currentView === 'playbooks' && (
-            <div className="animate-fadeIn">
-              <TacticalPlaybookModal
-                isInline={true}
-                initialPlaybookId={activePlaybookId}
-              />
-            </div>
-          )}
-
-          {/* VIEW: System Diagnostics & Health */}
-          {currentView === 'health' && (
-            <div className="animate-fadeIn">
-              <SystemHealthModal
-                isInline={true}
-                wsConnected={wsConnected}
-              />
-            </div>
-          )}
         </main>
 
         {/* Global Footer */}
@@ -273,50 +189,20 @@ export default function App() {
           <div className="max-w-[1600px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
             <span className="flex items-center gap-2 text-slate-300">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              GeoSentinel AI &bull; Enterprise Threat Operations Center (GTOC v2.4)
+              GeoSentinel AI &bull; Geopolitical Threat Intelligence Platform (v2.4)
             </span>
             <span className="text-slate-500 text-[11px]">
-              Mathematical Geopolitical Modeling &amp; Corporate Asset Geofencing Suite
+              Explainable OSINT Deduplication &amp; Time-Decayed Country Risk Scoring
             </span>
           </div>
         </footer>
       </div>
-
-      {/* Floating Copilot Launcher Button */}
-      {!isCopilotOpen && (
-        <button
-          onClick={() => setIsCopilotOpen(true)}
-          className="fixed bottom-5 right-5 z-40 flex items-center gap-2.5 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-sky-600 to-indigo-600 text-white font-mono text-xs font-bold shadow-lg shadow-sky-950/60 hover:scale-105 transition-all border border-sky-400/30"
-          title="Open GeoSentinel AI Intelligence Copilot"
-        >
-          <Bot className="w-4 h-4 text-sky-200" />
-          <span>Ask Copilot</span>
-        </button>
-      )}
-
-      {/* Sliding AI Copilot Drawer */}
-      <AiAnalystDrawer
-        isOpen={isCopilotOpen}
-        onClose={() => setIsCopilotOpen(false)}
-      />
 
       {/* Country Detail & Evidence Modal */}
       {selectedIso && (
         <CountryDetailsModal
           iso={selectedIso}
           onClose={() => setSelectedIso(null)}
-          onOpenDossier={(iso) => {
-            setSelectedIso(null);
-            setDossierIso(iso);
-          }}
-        />
-      )}
-
-      {/* Strategic Intelligence Dossier Modal */}
-      {dossierIso && (
-        <DossierExportModal
-          iso={dossierIso}
-          onClose={() => setDossierIso(null)}
         />
       )}
     </div>

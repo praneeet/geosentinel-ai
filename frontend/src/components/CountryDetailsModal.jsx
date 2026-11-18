@@ -4,7 +4,8 @@ import {
   Shield,
   TrendingUp,
   Calendar,
-  FileText,
+  Download,
+  Printer,
   ExternalLink,
   Activity,
   Sparkles,
@@ -39,7 +40,6 @@ import { api } from '../api/client';
 export default function CountryDetailsModal({
   iso,
   onClose,
-  onOpenDossier,
 }) {
   const [riskData, setRiskData] = useState(null);
   const [historyData, setHistoryData] = useState([]);
@@ -236,6 +236,38 @@ export default function CountryDetailsModal({
 
   const maxDomainScore = Math.max(...domainBreakdown.map((d) => d.score), 1);
 
+  const handleExportJSON = () => {
+    const payload = {
+      country_iso: iso,
+      country_name: riskData?.country_name || iso,
+      exported_at: new Date().toISOString(),
+      risk_index: compositeScore,
+      risk_tier: riskData?.risk_tier || 'Low',
+      event_count: riskData?.event_count || events.length,
+      category_breakdown: {
+        Conflict: conflictScore,
+        Security: securityScore,
+        Economy: economyScore,
+        Diplomacy: diplomacyScore,
+      },
+      executive_briefing: summaryData?.bullet_points || [],
+      evidence_links: summaryData?.evidence_links || [],
+      forecast: forecastData,
+      recent_events: events,
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `GeoSentinel_${iso}_Report_${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handlePrint = () => {
+    window.print();
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/85 backdrop-blur-md overflow-y-auto font-sans animate-fadeIn">
       <div className="bg-[#0B121E] w-full max-w-5xl rounded-2xl border border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
@@ -265,16 +297,25 @@ export default function CountryDetailsModal({
             </div>
           </div>
 
-          <div className="flex items-center gap-2.5">
-            {onOpenDossier && (
-              <button
-                onClick={() => onOpenDossier(iso)}
-                className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-sky-600 hover:bg-sky-500 text-white shadow-md hover:shadow-sky-600/30 transition-all font-mono"
-              >
-                <FileText className="w-3.5 h-3.5" />
-                <span>Export Dossier</span>
-              </button>
-            )}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handlePrint}
+              disabled={loading}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 transition-colors font-mono disabled:opacity-40"
+              title="Print / Save as PDF"
+            >
+              <Printer className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Print</span>
+            </button>
+            <button
+              onClick={handleExportJSON}
+              disabled={loading}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-sky-600 hover:bg-sky-500 text-white shadow-md hover:shadow-sky-600/30 transition-all font-mono disabled:opacity-40"
+              title="Export country risk data and evidence as JSON"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>Export JSON</span>
+            </button>
             <button
               onClick={onClose}
               className="p-1.5 text-slate-400 hover:text-white rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 transition-colors"

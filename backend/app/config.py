@@ -5,24 +5,18 @@ from pydantic_settings import BaseSettings
 from pydantic import Field
 
 class Settings(BaseSettings):
-    PROJECT_NAME: str = "GeoSentinel Enterprise"
-    FULL_TITLE: str = "GeoSentinel Enterprise: Global Geopolitical Threat Intelligence & Asset Defense Platform"
-    INSTITUTION: str = "GeoSentinel Global Intelligence Services (GIS)"
-    DEPARTMENT: str = "Global Threat Operations Center (GTOC)"
-    PROJECT_GROUP: str = "Enterprise Edition v2.4"
+    PROJECT_NAME: str = "GeoSentinel AI"
+    FULL_TITLE: str = "GeoSentinel AI: Global Geopolitical Threat Intelligence & Risk Scoring Platform"
+    INSTITUTION: str = "GeoSentinel AI"
+    DEPARTMENT: str = "Threat Intelligence Operations"
+    PROJECT_GROUP: str = "v2.4"
     VERSION: str = "2.4.0"
     API_V1_STR: str = "/api"
     ENVIRONMENT: str = "development"
     DEBUG: bool = True
-    SECRET_KEY: str = "geosentinel-secret-key-super-secure-change-in-prod"
 
     # Database - Canonical project root SQLite path
     DATABASE_URL: str = f"sqlite+aiosqlite:///{os.path.abspath(os.path.join(os.path.dirname(__file__), '../../geosentinel.db')).replace(chr(92), '/')}"
-
-    # Redis & Celery
-    REDIS_URL: str = "redis://localhost:6379/0"
-    CELERY_BROKER_URL: str = "redis://localhost:6379/0"
-    CELERY_RESULT_BACKEND: str = "redis://localhost:6379/0"
 
     # Ingestion Source Keys
     NEWSAPI_KEY: str = ""

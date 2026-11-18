@@ -5,15 +5,8 @@ import {
   TrendingUp,
   Newspaper,
   BellRing,
-  Building2,
-  Compass,
-  BookOpen,
-  Activity,
-  Bot,
   ChevronLeft,
   ChevronRight,
-  Radio,
-  ExternalLink,
 } from 'lucide-react';
 
 export default function Sidebar({
@@ -22,32 +15,22 @@ export default function Sidebar({
   isCollapsed,
   onToggleCollapse,
   alertsCount = 0,
-  assetsCount = 0,
   wsConnected = false,
-  onOpenCopilot,
 }) {
   const navSections = [
     {
       title: 'INTELLIGENCE',
       items: [
-        { id: 'dashboard', label: 'Tactical Map', icon: LayoutDashboard, badge: null },
+        { id: 'dashboard', label: 'World Risk Map', icon: LayoutDashboard, badge: null },
         { id: 'analytics', label: 'Risk Analytics', icon: TrendingUp, badge: null },
         { id: 'news', label: 'OSINT News Wire', icon: Newspaper, badge: null },
-        { id: 'alerts', label: 'Live Alerts', icon: BellRing, badge: alertsCount > 0 ? alertsCount : null, badgeColor: 'bg-rose-500 text-white' },
-      ],
-    },
-    {
-      title: 'OPERATIONS & DEFENSE',
-      items: [
-        { id: 'assets', label: 'Corporate Assets', icon: Building2, badge: assetsCount, badgeColor: 'bg-sky-500/20 text-sky-400 border border-sky-500/30' },
-        { id: 'simulation', label: 'What-If Sandbox', icon: Compass, badge: null },
-        { id: 'playbooks', label: 'Action Playbooks', icon: BookOpen, badge: null },
-      ],
-    },
-    {
-      title: 'SYSTEM & SUPPORT',
-      items: [
-        { id: 'health', label: 'System Health', icon: Activity, badge: null },
+        {
+          id: 'alerts',
+          label: 'Live Alerts',
+          icon: BellRing,
+          badge: alertsCount > 0 ? alertsCount : null,
+          badgeColor: 'bg-rose-500 text-white',
+        },
       ],
     },
   ];
@@ -111,7 +94,7 @@ export default function Sidebar({
                   key={item.id}
                   onClick={() => onSelectView(item.id)}
                   title={isCollapsed ? item.label : undefined}
-                  className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs font-medium transition-all group ${
+                  className={`relative w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs font-medium transition-all group ${
                     isActive
                       ? 'bg-sky-500/15 text-sky-300 border border-sky-500/30 shadow-sm'
                       : 'text-slate-400 hover:text-slate-200 hover:bg-slate-850 border border-transparent'
@@ -142,25 +125,6 @@ export default function Sidebar({
             })}
           </div>
         ))}
-
-        {/* AI Copilot Quick Launcher Button */}
-        <div className="pt-2">
-          <button
-            onClick={onOpenCopilot}
-            className={`w-full flex items-center gap-2.5 p-2 rounded-lg bg-gradient-to-r from-sky-600/20 to-indigo-600/20 hover:from-sky-600/30 hover:to-indigo-600/30 border border-sky-500/30 text-sky-200 text-xs font-mono transition-all shadow-sm ${
-              isCollapsed ? 'justify-center p-2.5' : ''
-            }`}
-            title="Launch Ask GeoSentinel AI Copilot"
-          >
-            <Bot className="w-4 h-4 text-sky-400 shrink-0" />
-            {!isCollapsed && (
-              <div className="flex-1 text-left">
-                <div className="font-semibold text-white">Ask Copilot</div>
-                <div className="text-[10px] text-sky-300/70">RAG Intelligence</div>
-              </div>
-            )}
-          </button>
-        </div>
       </div>
 
       {/* Telemetry Status Footer */}
@@ -173,7 +137,7 @@ export default function Sidebar({
           />
           {!isCollapsed && (
             <div className="flex-1 text-[11px] font-mono text-slate-400 flex items-center justify-between">
-              <span>{wsConnected ? 'SYSTEM SECURE' : 'STREAM OFFLINE'}</span>
+              <span>{wsConnected ? 'WS STREAM LIVE' : 'STREAM OFFLINE'}</span>
               <span className="text-[10px] text-slate-400 font-sans">v2.4</span>
             </div>
           )}
@@ -182,4 +146,3 @@ export default function Sidebar({
     </aside>
   );
 }
-

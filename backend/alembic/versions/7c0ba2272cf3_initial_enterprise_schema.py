@@ -111,55 +111,7 @@ def upgrade() -> None:
     op.create_index(op.f('ix_alerts_country_iso'), 'alerts', ['country_iso'], unique=False)
     op.create_index(op.f('ix_alerts_sent_at'), 'alerts', ['sent_at'], unique=False)
 
-    # 6. Table: corporate_assets
-    op.create_table(
-        'corporate_assets',
-        sa.Column('asset_id', sa.String(length=36), nullable=False),
-        sa.Column('name', sa.String(length=120), nullable=False),
-        sa.Column('asset_type', sa.String(length=32), nullable=False, server_default='FACILITY'),
-        sa.Column('country_iso', sa.String(length=3), nullable=False),
-        sa.Column('latitude', sa.Float(), nullable=False),
-        sa.Column('longitude', sa.Float(), nullable=False),
-        sa.Column('buffer_radius_km', sa.Float(), nullable=False, server_default='200.0'),
-        sa.Column('criticality', sa.String(length=32), nullable=False, server_default='TIER_1_MISSION_CRITICAL'),
-        sa.Column('description', sa.Text(), nullable=True),
-        sa.Column('prescriptive_directive', sa.Text(), nullable=False, server_default=''),
-        sa.Column('created_at', sa.DateTime(timezone=True), nullable=True),
-        sa.PrimaryKeyConstraint('asset_id')
-    )
-    op.create_index(op.f('ix_corporate_assets_country_iso'), 'corporate_assets', ['country_iso'], unique=False)
-
-    # 7. Table: playbooks
-    op.create_table(
-        'playbooks',
-        sa.Column('playbook_id', sa.String(length=64), nullable=False),
-        sa.Column('title', sa.String(length=256), nullable=False),
-        sa.Column('category', sa.String(length=64), nullable=False),
-        sa.Column('trigger_threshold', sa.Text(), nullable=False),
-        sa.Column('threat_theater', sa.Text(), nullable=False),
-        sa.Column('executive_summary', sa.Text(), nullable=False),
-        sa.Column('quantified_impact', sa.JSON(), nullable=False),
-        sa.Column('recommended_option', sa.Text(), nullable=False),
-        sa.Column('prescriptive_action_plan', sa.JSON(), nullable=False),
-        sa.Column('bimco_legal_clauses', sa.JSON(), nullable=False),
-        sa.Column('created_at', sa.DateTime(timezone=True), nullable=True),
-        sa.PrimaryKeyConstraint('playbook_id')
-    )
-
-    # 8. Table: reports
-    op.create_table(
-        'reports',
-        sa.Column('report_id', sa.String(length=36), nullable=False),
-        sa.Column('country_iso', sa.String(length=3), nullable=False),
-        sa.Column('country_name', sa.String(length=128), nullable=False),
-        sa.Column('generated_at', sa.DateTime(timezone=True), nullable=False),
-        sa.Column('classification', sa.String(length=128), nullable=False),
-        sa.Column('dossier_data', sa.JSON(), nullable=False),
-        sa.PrimaryKeyConstraint('report_id')
-    )
-    op.create_index(op.f('ix_reports_country_iso'), 'reports', ['country_iso'], unique=False)
-
-    # 9. Table: risk_score_history
+    # 6. Table: risk_score_history
     op.create_table(
         'risk_score_history',
         sa.Column('history_id', sa.String(length=36), nullable=False),
@@ -177,9 +129,6 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     op.drop_table('risk_score_history')
-    op.drop_table('reports')
-    op.drop_table('playbooks')
-    op.drop_table('corporate_assets')
     op.drop_table('alerts')
     op.drop_table('summaries')
     op.drop_table('country_scores')

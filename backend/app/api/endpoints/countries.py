@@ -70,6 +70,21 @@ async def list_countries(db: AsyncSession = Depends(get_db)):
         })
     return output
 
+async def _fetch_recent_history_points(
+    country_iso: str, db: AsyncSession, limit: int = 30
+) -> List[float]:
+    """Fetches real chronological risk history points from the database for forecasting."""
+    hist_stmt = (
+        select(RiskScoreHistory.risk_index)
+        .where(RiskScoreHistory.country_iso == country_iso)
+        .order_by(RiskScoreHistory.recorded_at.desc())
+        .limit(limit)
+    )
+    hist_res = await db.execute(hist_stmt)
+    rows = list(reversed(hist_res.scalars().all()))
+    return [float(r) for r in rows if r is not None]
+
+
 @router.get("/countries/{iso}/risk")
 async def get_country_risk(iso: str, db: AsyncSession = Depends(get_db)):
     c_iso = iso.upper()
@@ -163,6 +178,8 @@ async def get_country_risk(iso: str, db: AsyncSession = Depends(get_db)):
         "contributing_factors": raw_factors
     })
 
+    history_pts = await _fetch_recent_history_points(c_iso, db)
+
     return {
         "country_iso": c_iso,
         "country_name": info["name"],
@@ -175,7 +192,11 @@ async def get_country_risk(iso: str, db: AsyncSession = Depends(get_db)):
         "category_breakdown": category_breakdown,
         "latitude": info["lat"],
         "longitude": info["lon"],
-        "forecast": forecasting_engine.generate_forecast(current_risk=score_obj.risk_index, days=7),
+        "forecast": forecasting_engine.generate_forecast(
+            current_risk=score_obj.risk_index,
+            history_points=history_pts or None,
+            days=7,
+        ),
         "explanation": explanation,
     }
 
@@ -187,7 +208,12 @@ async def get_country_forecast(iso: str, days: int = Query(7, ge=1, le=14), db: 
     res = await db.execute(stmt)
     score_obj = res.scalars().first()
     cur_risk = score_obj.risk_index if score_obj else 15.0
-    return forecasting_engine.generate_forecast(current_risk=cur_risk, days=days)
+    history_pts = await _fetch_recent_history_points(c_iso, db)
+    return forecasting_engine.generate_forecast(
+        current_risk=cur_risk,
+        history_points=history_pts or None,
+        days=days,
+    )
 
 @router.get("/countries/{iso}/history", response_model=List[RiskHistoryPoint])
 async def get_country_history(iso: str, days: int = Query(30, ge=1, le=90), db: AsyncSession = Depends(get_db)):

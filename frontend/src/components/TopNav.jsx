@@ -4,12 +4,8 @@ import {
   BellRing,
   RefreshCw,
   Radio,
-  Bot,
-  Shield,
-  ExternalLink,
   ChevronRight,
   X,
-  Building2,
   Globe,
 } from 'lucide-react';
 
@@ -18,12 +14,9 @@ export default function TopNav({
   wsConnected,
   isIngesting,
   onTriggerIngest,
-  onOpenCopilot,
   alerts = [],
   countries = [],
   onSelectCountry,
-  onSelectAsset,
-  assets = [],
 }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -45,41 +38,27 @@ export default function TopNav({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Filter countries and assets for quick jump
+  // Filter countries for quick jump
   const filteredCountries = searchQuery.trim()
-    ? countries.filter(
-        (c) =>
-          c.country_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          c.country_iso?.toLowerCase().includes(searchQuery.toLowerCase())
-      ).slice(0, 5)
-    : [];
-
-  const filteredAssets = searchQuery.trim()
-    ? assets.filter(
-        (a) =>
-          a.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          a.country_iso?.toLowerCase().includes(searchQuery.toLowerCase())
-      ).slice(0, 4)
+    ? countries
+        .filter(
+          (c) =>
+            c.country_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            c.country_iso?.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+        .slice(0, 6)
     : [];
 
   const getBreadcrumb = () => {
     switch (currentView) {
       case 'dashboard':
-        return 'Tactical Map & Overview';
+        return 'World Risk Map & Overview';
       case 'analytics':
         return 'Risk Analytics & Forecasting';
       case 'news':
         return 'OSINT News Wire';
       case 'alerts':
         return 'Threat Alerts Log';
-      case 'assets':
-        return 'Corporate Geofences';
-      case 'simulation':
-        return 'What-If Scenario Sandbox';
-      case 'playbooks':
-        return 'Action Playbooks';
-      case 'health':
-        return 'System Health & Telemetry';
       default:
         return 'Dashboard';
     }
@@ -106,33 +85,38 @@ export default function TopNav({
               setIsSearchOpen(true);
             }}
             onFocus={() => setIsSearchOpen(true)}
-            placeholder="Search countries, facilities, or ISO codes..."
-            className="w-full pl-9 pr-12 py-1.5 bg-[#0D1422] border border-slate-800 focus:border-sky-500/50 rounded-lg text-xs text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-sky-500/30 transition-all font-sans"
+            placeholder="Search countries or ISO codes..."
+            className="w-full pl-9 pr-10 py-1.5 bg-[#0D1422] border border-slate-800 focus:border-sky-500/50 rounded-lg text-xs text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-sky-500/30 transition-all font-sans"
           />
-          <div className="absolute right-2 px-1.5 py-0.5 rounded bg-slate-800 text-[10px] font-mono text-slate-400 border border-slate-700/50">
-            /
-          </div>
+          {searchQuery && (
+            <button
+              onClick={() => {
+                setSearchQuery('');
+                setIsSearchOpen(false);
+              }}
+              className="absolute right-2.5 text-slate-400 hover:text-white"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
 
         {/* Search Results Dropdown */}
         {isSearchOpen && searchQuery.trim() && (
           <div className="absolute left-0 right-0 top-full mt-1.5 bg-[#0D1422] border border-slate-700/80 rounded-xl shadow-2xl p-2 z-50 animate-fadeIn text-xs">
             <div className="px-2 py-1 text-[10px] font-mono text-slate-400 uppercase tracking-wider flex items-center justify-between border-b border-slate-800 pb-1 mb-1">
-              <span>Search Results</span>
+              <span>Countries</span>
               <button onClick={() => setIsSearchOpen(false)} className="text-slate-400 hover:text-white">
                 <X className="w-3 h-3" />
               </button>
             </div>
 
-            {filteredCountries.length === 0 && filteredAssets.length === 0 && (
+            {filteredCountries.length === 0 ? (
               <div className="p-3 text-center text-slate-400 text-xs font-mono">
-                No matching country or asset found.
+                No matching country found.
               </div>
-            )}
-
-            {filteredCountries.length > 0 && (
-              <div className="space-y-0.5 mb-2">
-                <div className="px-2 text-[10px] font-mono text-sky-400 font-semibold">Countries</div>
+            ) : (
+              <div className="space-y-0.5">
                 {filteredCountries.map((c) => (
                   <button
                     key={c.country_iso}
@@ -163,29 +147,6 @@ export default function TopNav({
                 ))}
               </div>
             )}
-
-            {filteredAssets.length > 0 && (
-              <div className="space-y-0.5">
-                <div className="px-2 text-[10px] font-mono text-indigo-400 font-semibold">Corporate Facilities</div>
-                {filteredAssets.map((a) => (
-                  <button
-                    key={a.asset_id}
-                    onClick={() => {
-                      onSelectAsset(a);
-                      setIsSearchOpen(false);
-                      setSearchQuery('');
-                    }}
-                    className="w-full flex items-center justify-between p-2 rounded-lg hover:bg-slate-800 text-slate-200 transition-colors text-left"
-                  >
-                    <div className="flex items-center gap-2">
-                      <Building2 className="w-3.5 h-3.5 text-indigo-400" />
-                      <span className="font-medium truncate">{a.name}</span>
-                    </div>
-                    <span className="text-[10px] font-mono text-slate-400">{a.country_iso}</span>
-                  </button>
-                ))}
-              </div>
-            )}
           </div>
         )}
       </div>
@@ -207,16 +168,6 @@ export default function TopNav({
           <span className="hidden sm:inline">{isIngesting ? 'Ingesting...' : 'Ingest Feeds'}</span>
         </button>
 
-        {/* Quick Ask Copilot Button */}
-        <button
-          onClick={onOpenCopilot}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-sky-500/10 hover:bg-sky-500/20 text-sky-300 border border-sky-500/30 transition-all font-mono"
-          title="Open AI Intelligence Copilot"
-        >
-          <Bot className="w-3.5 h-3.5 text-sky-400" />
-          <span className="hidden sm:inline">Ask Copilot</span>
-        </button>
-
         {/* Notification Center Dropdown */}
         <div className="relative" ref={alertsRef}>
           <button
@@ -235,7 +186,7 @@ export default function TopNav({
               <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-800">
                 <div className="font-mono font-bold text-slate-200 flex items-center gap-1.5">
                   <BellRing className="w-3.5 h-3.5 text-rose-400" />
-                  <span>Critical Alerts Broadcast ({alerts.length})</span>
+                  <span>Critical Alerts ({alerts.length})</span>
                 </div>
                 <span className="text-[10px] text-slate-400 font-mono">R &gt; 75 Threshold</span>
               </div>
@@ -247,9 +198,13 @@ export default function TopNav({
               ) : (
                 <div className="max-h-80 overflow-y-auto space-y-2 pr-1">
                   {alerts.slice(0, 6).map((a, i) => (
-                    <div
+                    <button
                       key={a.alert_id || i}
-                      className="p-2.5 rounded-lg bg-slate-900 border border-rose-500/20 hover:border-rose-500/40 transition-colors"
+                      onClick={() => {
+                        setIsAlertsOpen(false);
+                        onSelectCountry(a.country_iso || a.country);
+                      }}
+                      className="w-full text-left p-2.5 rounded-lg bg-slate-900 border border-rose-500/20 hover:border-rose-500/40 transition-colors"
                     >
                       <div className="flex items-center justify-between mb-1">
                         <span className="px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-rose-950 text-rose-400 border border-rose-800/50">
@@ -265,7 +220,7 @@ export default function TopNav({
                           {Number(a.risk_score).toFixed(1)} / 100
                         </strong>.
                       </p>
-                    </div>
+                    </button>
                   ))}
                 </div>
               )}
@@ -289,4 +244,3 @@ export default function TopNav({
     </header>
   );
 }
-
