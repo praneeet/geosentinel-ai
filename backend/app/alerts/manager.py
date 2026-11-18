@@ -23,13 +23,28 @@ class AlertManager:
         # In-memory fast cache for country last-alert timestamps: {country_iso: datetime}
         self._last_alerted: Dict[str, datetime] = {}
 
-    def is_in_cooldown(self, country_iso: str, now: datetime = None) -> bool:
+    async def is_in_cooldown(self, country_iso: str, session: Optional[AsyncSession] = None, now: datetime = None) -> bool:
         current = now or datetime.now(timezone.utc)
+        # 1. Fast in-memory check
         last_time = self._last_alerted.get(country_iso)
-        if not last_time:
-            return False
-        delta = current - last_time
-        return delta < timedelta(hours=self.cooldown_hours)
+        if last_time and (current - last_time) < timedelta(hours=self.cooldown_hours):
+            return True
+        # 2. Persistent database check across worker processes & restarts
+        if session is not None:
+            try:
+                cutoff = current - timedelta(hours=self.cooldown_hours)
+                stmt = select(Alert).where(
+                    Alert.country_iso == country_iso,
+                    Alert.sent_at >= cutoff
+                ).limit(1)
+                res = await session.execute(stmt)
+                existing = res.scalars().first()
+                if existing:
+                    self._last_alerted[country_iso] = existing.sent_at or current
+                    return True
+            except Exception:
+                pass
+        return False
 
     async def check_and_trigger(
         self,
@@ -47,7 +62,7 @@ class AlertManager:
         if risk_score <= settings.ALERT_CRITICAL_THRESHOLD:
             return None
 
-        if self.is_in_cooldown(country_iso, now):
+        if await self.is_in_cooldown(country_iso, session=session, now=now):
             logger.info(f"Suppressed alert for {country_iso} due to active {self.cooldown_hours}h cooldown.")
             return None
 

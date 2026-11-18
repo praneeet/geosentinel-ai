@@ -14,8 +14,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Download lightweight spacy core model for NER
-RUN python -m spacy download en_core_web_sm || true
+# Download lightweight spacy core model for NER and VADER lexicon
+RUN python -m spacy download en_core_web_sm || true && \
+    python -m nltk.downloader vader_lexicon || true
 
 COPY . .
 

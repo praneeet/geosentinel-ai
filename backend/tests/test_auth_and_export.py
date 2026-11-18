@@ -30,3 +30,23 @@ async def test_export_events_csv():
         assert "text/csv" in resp.headers.get("content-type", "")
         csv_text = resp.text
         assert "event_id,timestamp,country_iso,category" in csv_text
+
+
+@pytest.mark.asyncio
+async def test_ingestion_api_key_auth():
+    from app.config import settings
+
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        old_demo = settings.DEMO_MODE
+        try:
+            settings.DEMO_MODE = False
+            resp_unauth = await client.post(
+                "/api/ingestion/run", headers={"X-API-Key": "invalid-secret"}
+            )
+            assert resp_unauth.status_code == 401
+
+            resp_missing = await client.post("/api/ingestion/run")
+            assert resp_missing.status_code == 401
+        finally:
+            settings.DEMO_MODE = old_demo

@@ -16,7 +16,7 @@ class Event(Base):
     entities = Column(JSON, default=list)  # extracted GPE, LOC, ORG, PERSON
     timestamp = Column(DateTime(timezone=True), nullable=False, index=True)
     confidence = Column(Float, default=0.95)
-    model_version = Column(String(32), default="distilbert-geosentinel-v1")
+    model_version = Column(String(32), default="tfidf-logistic-v1")
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
     article = relationship("Article", back_populates="events")

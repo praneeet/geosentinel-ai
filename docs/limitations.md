@@ -8,7 +8,7 @@
 
 ## Technical Limitations
 1. **OSINT Coverage Variances**: Open-source news coverage is subject to regional media density and language reporting biases.
-2. **Abstractive Hallucinations**: While BART summarization targets ROUGE-L $\ge 0.40$, abstractive NLP models may occasionally rephrase tactical nomenclature. Primary source URLs are always preserved for verification.
+2. **Summarization Fidelity**: GeoSentinel AI employs an extractive template-based executive summarization engine to prevent neural hallucinations and ensure strict tactical nomenclature accuracy without high-GPU overhead. Primary source URLs are always preserved for verification.
 3. **Forecasting Nature**: Trend-based forecasting models (Holt-Winters / momentum drift) project statistical risk index trajectories and do NOT predict deterministic black-swan geopolitical incidents.
 
 ---

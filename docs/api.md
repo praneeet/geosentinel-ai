@@ -27,7 +27,7 @@
 - `GET /api/countries`: List of monitored sovereign countries with current risk index.
 - `GET /api/countries/{iso}/risk`: Current risk scorecard, formula variables, and additive explainability breakdown.
 - `GET /api/countries/{iso}/history`: Time-series risk history (24h / 7d / 30d).
-- `GET /api/countries/{iso}/summary`: BART 3-bullet executive briefing with primary source citations.
+- `GET /api/countries/{iso}/summary`: Extractive 3-bullet executive briefing with primary source citations.
 - `GET /api/countries/{iso}/events`: Chronological list of events for the specified country.
 
 ### 5. Geospatial Risk Map
@@ -41,6 +41,6 @@
 - `WS /ws/alerts`: WebSocket live stream for instant critical alerts.
 
 ### 8. Pipeline Ingestion & Reporting
-- `POST /api/ingestion/run`: Manually triggers ETL cycle and risk recalculation.
+- `POST /api/ingestion/run`: Manually triggers ETL cycle and risk recalculation (Requires X-API-Key header).
 - `POST /api/reports/generate`: Generates an on-demand, evidence-backed intelligence dossier.
 - `GET /api/reports/{id}`: Retrieves an existing generated dossier.

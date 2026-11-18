@@ -2,9 +2,9 @@
 
 ## Mathematical Formulation
 
-The country risk index $R_c(t)$ is computed via the closed-form mathematical equation documented in Equation (1) of the Academic Synopsis:
+The country risk index $R_c(t)$ is computed via the closed-form asymptotic hazard saturation equation:
 
-$$R_c(t) = \min\left(100,\; \frac{\alpha}{N_c(T)} \sum_{i=1}^{N_c(T)} w_i \cdot |S_{a,i}| \cdot c_{s,i} \cdot e^{-\lambda(t - t_i)}\right)$$
+$$R_c(t) = \min\left(100,\; 100 \cdot \left(1 - \exp\left(-\gamma \sum_{i=1}^{N_c(T)} w_i \cdot |S_{a,i}| \cdot c_{s,i} \cdot e^{-\lambda(t - t_i)}\right)\right)\right)$$
 
 ---
 
@@ -14,7 +14,7 @@ $$R_c(t) = \min\left(100,\; \frac{\alpha}{N_c(T)} \sum_{i=1}^{N_c(T)} w_i \cdot 
 | :--- | :--- | :--- |
 | **$T$** | Observation sliding window | $30\text{ days}$ |
 | **$N_c(T)$** | Active events for country $c$ within window $T$ | $N \ge 0$ |
-| **$\alpha$** | Empirical normalization scalar | $4.25$ |
+| **$\gamma$** | Calibrated asymptotic crisis saturation scalar | $0.07$ |
 | **$\lambda$** | Continuous temporal exponential decay rate | $\frac{\ln 2}{7} \approx 0.099021\text{ day}^{-1}$ |
 | **$w_i$** | Domain severity weight | $\text{Conflict: } 1.00$, $\text{Security: } 0.80$, $\text{Economy: } 0.55$, $\text{Diplomacy: } 0.35$ |
 | **$|S_{a,i}|$** | Absolute sentiment polarity magnitude | $[0.0, 1.0]$ |

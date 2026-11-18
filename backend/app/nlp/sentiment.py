@@ -16,9 +16,13 @@ class SentimentAndSeverityAnalyzer:
             import nltk
             try:
                 nltk.data.find("sentiment/vader_lexicon.zip")
+                self._vader = SentimentIntensityAnalyzer()
             except LookupError:
-                nltk.download("vader_lexicon", quiet=True)
-            self._vader = SentimentIntensityAnalyzer()
+                try:
+                    nltk.download("vader_lexicon", quiet=True)
+                    self._vader = SentimentIntensityAnalyzer()
+                except Exception:
+                    self._vader = None
         except Exception:
             self._vader = None
 

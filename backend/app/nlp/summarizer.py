@@ -9,7 +9,7 @@ class ExecutiveSummarizer:
     2. Strategic significance: Operational/tactical impact
     3. Geopolitical implication: Regional balance of power and risk exposure
     """
-    def __init__(self, model_version: str = "extractive-briefing-v1"):
+    def __init__(self, model_version: str = "extractive-heuristics-v1"):
         self.model_version = model_version
 
     def generate_bullet_briefing(

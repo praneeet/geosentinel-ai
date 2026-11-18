@@ -42,7 +42,7 @@ def test_sentiment_bounds():
     assert -1.0 <= neg_score <= 1.0
     assert pos_score > neg_score
 
-def test_bart_summarizer_three_bullet_format():
+def test_executive_summarizer_three_bullet_format():
     bullets = summarizer.generate_bullet_briefing(
         title="Missile Interceptions Reported Over Coastal Port",
         body_text="Air defense radars detected multiple hostile unmanned vehicles approaching port logistics. Two vessels sustained minor fragment damage.",

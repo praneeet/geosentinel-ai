@@ -1,6 +1,6 @@
 import uuid
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from typing import List, Dict, Any, Tuple
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -193,13 +193,17 @@ class IngestionService:
 
         # Recalculate Risk Scores for all affected countries
         alerts_triggered = []
+        cutoff = datetime.now(timezone.utc) - timedelta(days=settings.OBSERVATION_WINDOW_DAYS)
         for c_iso in affected_countries:
             if c_iso == "GLB":
                 continue
             ev_stmt = (
                 select(Event, Article.credibility)
                 .join(Article, Event.article_id == Article.article_id)
-                .where(Event.country_iso == c_iso)
+                .where(
+                    Event.country_iso == c_iso,
+                    Event.timestamp >= cutoff,
+                )
             )
             ev_res = await session.execute(ev_stmt)
             country_events = []

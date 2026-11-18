@@ -1,13 +1,13 @@
-# Model Evaluation: BART 3-Bullet Executive Summarizer
+# Model Evaluation: Extractive 3-Bullet Executive Summarizer
 
 ## Academic Context
-- **Target Specification**: ROUGE-L $\ge 0.40$
+- **Target Specification**: Zero-hallucination factual consistency & ROUGE-L alignment ($\ge 0.40$)
 - **Standardized Format**:
   1. `Key development:` Primary factual event and operational theater
   2. `Strategic significance:` Tactical impact on forces, assets, or infrastructure
   3. `Geopolitical implication:` Regional balance of power and risk exposure
-- **Architecture**: In-Pipeline Abstractive Executive Summarization Architecture
-- **Evaluation Dataset**: Gold-standard multi-domain crisis reporting corpus ($N = 4$)
+- **Architecture**: In-Pipeline Extractive Template-Based Executive Summarization Architecture (`extractive-heuristics-v1`)
+- **Evaluation Dataset**: Standard multi-domain crisis reporting verification corpus ($N = 4$)
 
 ## Measured Evaluation Metrics
 | Metric | Measured F1 Score | Target Specification | Status |

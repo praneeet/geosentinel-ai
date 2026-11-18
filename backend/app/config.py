@@ -29,13 +29,16 @@ class Settings(BaseSettings):
     DEMO_MODE: bool = True
 
     # Risk Scoring Formulation Parameters:
-    # R_c(t) = min(100, (alpha / N) * sum(w_i * |S_i| * c_i * exp(-lambda * delta_t)))
-    ALPHA_SCALAR: float = 4.25
+    # Closed-form Asymptotic Hazard Saturation:
+    # R_c(t) = min(100, 100 * (1 - exp(-gamma * sum(w_i * |S_i| * c_i * exp(-lambda * delta_t)))))
+    GAMMA_SCALAR: float = 0.07  # Calibrated asymptotic crisis saturation scalar
+    ALPHA_SCALAR: float = 4.25  # Legacy scalar retained for backwards compatibility
     DECAY_HALF_LIFE_DAYS: float = 7.0
     LAMBDA_DECAY: float = math.log(2) / 7.0  # ~0.09902102579427789
     OBSERVATION_WINDOW_DAYS: int = 30
     ALERT_CRITICAL_THRESHOLD: float = 75.0
     ALERT_COOLDOWN_HOURS: int = 6
+    ADMIN_API_KEY: str = "geosentinel-admin-secret"
 
     # Category Weights
     CATEGORY_WEIGHTS: Dict[str, float] = {

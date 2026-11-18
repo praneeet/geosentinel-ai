@@ -55,7 +55,7 @@ def upgrade() -> None:
         sa.Column('entities', sa.JSON(), nullable=True),
         sa.Column('timestamp', sa.DateTime(timezone=True), nullable=False),
         sa.Column('confidence', sa.Float(), nullable=True, server_default='0.95'),
-        sa.Column('model_version', sa.String(length=32), nullable=True, server_default='distilbert-geosentinel-v1'),
+        sa.Column('model_version', sa.String(length=32), nullable=True, server_default='tfidf-logistic-v1'),
         sa.Column('created_at', sa.DateTime(timezone=True), nullable=True),
         sa.ForeignKeyConstraint(['article_id'], ['articles.article_id'], ondelete='CASCADE'),
         sa.PrimaryKeyConstraint('event_id')
@@ -90,7 +90,7 @@ def upgrade() -> None:
         sa.Column('bullet_points', sa.JSON(), nullable=False),
         sa.Column('evidence_links', sa.JSON(), nullable=False),
         sa.Column('generated_at', sa.DateTime(timezone=True), nullable=True),
-        sa.Column('model_version', sa.String(length=32), nullable=True, server_default='bart-geosentinel-v1'),
+        sa.Column('model_version', sa.String(length=32), nullable=True, server_default='extractive-heuristics-v1'),
         sa.PrimaryKeyConstraint('summary_id')
     )
     op.create_index(op.f('ix_summaries_country_iso'), 'summaries', ['country_iso'], unique=False)

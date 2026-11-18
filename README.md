@@ -81,7 +81,7 @@ flowchart TD
     end
 
     subgraph Scoring ["Mathematical Risk Engine"]
-        NLP --> Formula["R_c(t) = min(100, (α/N) * Σ w_i * |S_i| * c_i * exp(-λ * Δt))"]
+        NLP --> Formula["R_c(t) = 100 * (1 - exp(-γ * Σ w_i * |S_i| * c_i * exp(-λ * Δt)))"]
         Formula --> Decay["7-Day Exponential Half-Life Decay"]
         Decay --> Tiers["Risk Tiers: Low (<30), Moderate (30-60), Severe (>60)"]
     end
@@ -101,11 +101,11 @@ flowchart TD
 ```
 
 ### Mathematical Risk Formulation
-Every country's risk score $R_c(t)$ is computed using the closed-form equation:
+Every country's risk score $R_c(t)$ is computed using the closed-form asymptotic hazard saturation equation:
 
-$$R_c(t) = \min\left(100,\; \frac{\alpha}{N_c(T)} \sum_{i=1}^{N_c(T)} w_i \cdot |S_{a,i}| \cdot c_{s,i} \cdot e^{-\lambda(t - t_i)}\right)$$
+$$R_c(t) = \min\left(100,\; 100 \cdot \left(1 - \exp\left(-\gamma \sum_{i=1}^{N_c(T)} w_i \cdot |S_{a,i}| \cdot c_{s,i} \cdot e^{-\lambda(t - t_i)}\right)\right)\right)$$
 
-- **$\alpha = 4.25$**: Calibrated normalization scalar.
+- **$\gamma = 0.07$**: Calibrated asymptotic crisis saturation scalar.
 - **$\lambda = \frac{\ln 2}{7} \approx 0.099021\text{ day}^{-1}$**: Exact 7-day half-life decay.
 - **$w_i$**: Category weights: `CONFLICT` ($1.00$), `SECURITY` ($0.80$), `ECONOMY` ($0.55$), `DIPLOMACY` ($0.35$).
 - **$|S_{a,i}| \in [0.0, 1.0]$**: Absolute sentiment polarity magnitude.

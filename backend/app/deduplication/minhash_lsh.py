@@ -65,6 +65,35 @@ class MinHashLSHDeduplicator:
                     pass
             self._signatures.pop(k, None)
 
+    async def warmup_from_db(self, session) -> int:
+        """
+        Loads recent articles within the 48-hour comparison window from the database
+        to restore the in-memory LSH index after service restart.
+        """
+        try:
+            from sqlalchemy import select
+            from app.models.article import Article
+            cutoff = datetime.now(timezone.utc) - timedelta(hours=self.window_hours)
+            stmt = select(Article.article_id, Article.body_text, Article.published_at).where(
+                Article.published_at >= cutoff
+            )
+            res = await session.execute(stmt)
+            count = 0
+            for aid, text, pub_at in res.all():
+                if aid not in self._signatures:
+                    shingles = self._generate_shingles(text or "")
+                    m = self._compute_minhash(shingles)
+                    if m is not None and self._lsh is not None:
+                        try:
+                            self._lsh.insert(aid, m)
+                        except Exception:
+                            pass
+                    self._signatures[aid] = (pub_at or datetime.now(timezone.utc), m, shingles)
+                    count += 1
+            return count
+        except Exception:
+            return 0
+
     def check_and_insert(
         self,
         article_id: str,

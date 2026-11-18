@@ -30,8 +30,9 @@ services:
       - ENVIRONMENT=production
       - DEBUG=False
       - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-geosentinel_admin}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-geosentinel_production}
-      - ENABLE_IN_APP_SCHEDULER=true
+      - ENABLE_IN_APP_SCHEDULER=false
       - DEMO_MODE=False
+      - ADMIN_API_KEY=${ADMIN_API_KEY:-geosentinel-admin-secret}
       - NEWSAPI_KEY=${NEWSAPI_KEY:-}
       - MEDIASTACK_KEY=${MEDIASTACK_KEY:-}
       - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL:-}
@@ -47,6 +48,34 @@ services:
           cpus: "2.0"
           memory: 2048M
 
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.prod
+    container_name: geosentinel-prod-worker
+    restart: always
+    command: ["python", "-m", "app.worker"]
+    environment:
+      - ENVIRONMENT=production
+      - DEBUG=False
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-geosentinel_admin}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-geosentinel_production}
+      - ENABLE_IN_APP_SCHEDULER=false
+      - DEMO_MODE=False
+      - NEWSAPI_KEY=${NEWSAPI_KEY:-}
+      - MEDIASTACK_KEY=${MEDIASTACK_KEY:-}
+      - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL:-}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID:-}
+      - WEBHOOKS_ENABLED=${WEBHOOKS_ENABLED:-false}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1024M
+
   frontend:
     build:
       context: ./frontend
@@ -55,7 +84,6 @@ services:
     restart: always
     ports:
       - "80:80"
-      - "443:443"
     depends_on:
       - backend
     deploy:

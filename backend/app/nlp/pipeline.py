@@ -25,7 +25,7 @@ class NLPPipeline:
         country_hint = article_data.get("country_hint")
         combined_text = f"{title}\n{body_text}"
 
-        # 1. Event Classification (DistilBERT)
+        # 1. Event Classification (TF-IDF + Calibrated Lexicon)
         category, confidence, model_ver = self.classifier.predict(combined_text)
 
         # 2. Entity Extraction & ISO-3166 Resolution (spaCy)
@@ -45,7 +45,7 @@ class NLPPipeline:
             text=combined_text,
         )
 
-        # 4. Executive Summarization (BART)
+        # 4. Executive Summarization (Extractive 3-Bullet Engine)
         bullet_points = self.summarizer.generate_bullet_briefing(
             title=title,
             body_text=body_text,

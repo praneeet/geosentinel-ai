@@ -16,38 +16,43 @@ if (-not (Test-Path $pythonExe)) {
     $pythonExe = "python"
 }
 
-# 2. Verify Frontend Dependencies
+# 2. Check for Frontend Bundler
 $frontendDir = Join-Path $rootDir "frontend"
-$nodeModules = Join-Path $frontendDir "node_modules"
-if (-not (Test-Path $nodeModules)) {
-    Write-Host "[*] Installing frontend dependencies (npm install)..." -ForegroundColor Yellow
-    Push-Location $frontendDir
-    npm install
-    Pop-Location
+$npmCmd = Get-Command "npm" -ErrorAction SilentlyContinue
+$frontendJob = $null
+$launchUrl = "http://127.0.0.1:8000"
+
+if ($npmCmd) {
+    $nodeModules = Join-Path $frontendDir "node_modules"
+    if (-not (Test-Path $nodeModules)) {
+        Write-Host "[*] Installing frontend dependencies (npm install)..." -ForegroundColor Yellow
+        Push-Location $frontendDir
+        npm install
+        Pop-Location
+    }
+    Write-Host "[+] Launching Vite Frontend on http://localhost:5173 ..." -ForegroundColor Green
+    $frontendJob = Start-Process -FilePath "cmd.exe" -ArgumentList "/c npm run dev" -WorkingDirectory $frontendDir -PassThru
+    Start-Sleep -Seconds 2
+    $launchUrl = "http://localhost:5173"
+} else {
+    Write-Host "[+] Serving pre-built production SPA bundle on http://127.0.0.1:8000 ..." -ForegroundColor Cyan
 }
 
 # 3. Start Backend Uvicorn Process
 Write-Host "[+] Launching FastAPI Backend on http://127.0.0.1:8000 ..." -ForegroundColor Green
 $backendJob = Start-Process -FilePath $pythonExe -ArgumentList "-m uvicorn app.main:app --app-dir backend --host 127.0.0.1 --port 8000" -WorkingDirectory $rootDir -PassThru
 
-# Wait 2 seconds for backend socket
-Start-Sleep -Seconds 2
+# Wait 3 seconds for backend socket
+Start-Sleep -Seconds 3
 
-# 4. Start Vite Frontend Process
-Write-Host "[+] Launching Vite Frontend on http://localhost:5173 ..." -ForegroundColor Green
-$frontendJob = Start-Process -FilePath "cmd.exe" -ArgumentList "/c npm run dev" -WorkingDirectory $frontendDir -PassThru
-
-# Wait 2 seconds for Vite bundler
-Start-Sleep -Seconds 2
-
-# 5. Open Default Browser to Dashboard
-Write-Host "[+] Opening GeoSentinel AI in browser..." -ForegroundColor Cyan
-Start-Process "http://localhost:5173"
+# 4. Open Default Browser to Dashboard
+Write-Host "[+] Opening GeoSentinel AI at $launchUrl ..." -ForegroundColor Cyan
+Start-Process $launchUrl
 
 Write-Host "`n========================================================" -ForegroundColor Green
 Write-Host "   GEOSENTINEL AI COMMAND CENTER ONLINE" -ForegroundColor Green
+Write-Host "   Mission Control  : $launchUrl" -ForegroundColor White
 Write-Host "   Backend API Docs : http://127.0.0.1:8000/docs" -ForegroundColor White
-Write-Host "   Frontend Console : http://localhost:5173" -ForegroundColor White
 Write-Host "   Press [ENTER] or close this window to terminate services." -ForegroundColor Yellow
 Write-Host "========================================================`n" -ForegroundColor Green
 

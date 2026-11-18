@@ -22,10 +22,11 @@ def test_single_event_calculation():
         "timestamp": now,        # delta_t = 0 => decay = 1.0
     }]
     res = engine.calculate_country_risk(events, current_time=now)
-    # raw_risk = 4.25 / 1 * (1.00 * 0.80 * 1.00 * 1.0) = 3.4
-    # density_multiplier = 1.0 + ln(2) * 0.45 = 1.3119
-    # scaled = 3.4 * 1.3119 = 4.46
-    assert 4.0 <= res["risk_index"] <= 6.0
+    # Closed-form Asymptotic Hazard Saturation:
+    # R_c(t) = 100 * (1 - exp(-gamma * sum_decayed))
+    # sum_decayed = 1.00 * 0.80 * 1.00 * 1.0 = 0.80
+    # R = 100 * (1 - exp(-0.07 * 0.80)) = 5.45
+    assert 4.0 <= res["risk_index"] <= 7.0
     assert res["risk_tier"] == "Low"
     assert res["event_count"] == 1
 
@@ -62,7 +63,7 @@ def test_seven_day_half_life_temporal_decay():
 
 def test_risk_score_bounded_between_zero_and_hundred():
     """Verify strictly bounded 0 <= R <= 100 even with extreme high event volume."""
-    engine = RiskScoringEngine(alpha=100.0)  # artificially high alpha
+    engine = RiskScoringEngine(gamma=0.20)  # calibrated or high saturation scalar
     now = datetime.now(timezone.utc)
     huge_events = [
         {

@@ -11,7 +11,7 @@ class GeoEventClassifier:
     Loads trained ML artifact (classifier_model.joblib) if available,
     falling back dynamically to calibrated domain keyword scoring.
     """
-    def __init__(self, model_version: str = "tfidf-classifier-geosentinel-v1"):
+    def __init__(self, model_version: str = "tfidf-logistic-v1"):
         self.model_version = model_version
         self.categories = ["CONFLICT", "SECURITY", "ECONOMY", "DIPLOMACY"]
         self._ml_model = None

@@ -1,5 +1,6 @@
 from typing import AsyncGenerator
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
+from sqlalchemy.pool import NullPool
 from app.config import settings
 from app.database.base import Base
 
@@ -11,6 +12,7 @@ engine_kwargs = {
 
 if "sqlite" in settings.DATABASE_URL:
     engine_kwargs["connect_args"] = {"check_same_thread": False}
+    engine_kwargs["poolclass"] = NullPool
 else:
     engine_kwargs["pool_size"] = 15
     engine_kwargs["max_overflow"] = 25

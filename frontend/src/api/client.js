@@ -49,7 +49,11 @@ export const api = {
   },
   getAlerts: (limit = 20) => apiRequest(`/alerts?limit=${limit}`),
   getWebhookStatus: () => apiRequest("/alerts/webhooks/status"),
-  runIngestion: () => apiRequest("/ingestion/run", { method: "POST" }),
+  runIngestion: () =>
+    apiRequest("/ingestion/run", {
+      method: "POST",
+      headers: { "X-API-Key": "geosentinel-admin-secret" },
+    }),
   getRiskGeoJSON: () => apiRequest("/risk/export/geojson"),
   getEventsCSVUrl: (countryIso = "") =>
     `${API_BASE}/events/export/csv${countryIso ? `?country_iso=${countryIso}` : ""}`,

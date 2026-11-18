@@ -21,7 +21,8 @@ RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
 # Download NLP models
-RUN python -m spacy download en_core_web_sm || true
+RUN python -m spacy download en_core_web_sm || true && \
+    python -m nltk.downloader vader_lexicon || true
 
 COPY . .
 

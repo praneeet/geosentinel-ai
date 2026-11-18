@@ -1,9 +1,11 @@
+import os
 import asyncio
 import logging
 import time
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import select, func
 
@@ -52,6 +54,11 @@ async def lifespan(app: FastAPI):
 
     # Seed baseline demo dataset if empty and DEMO_MODE is enabled
     async with async_session_factory() as session:
+        # Warm up MinHash LSH deduplicator with recent articles from DB
+        warmed = await deduplicator.warmup_from_db(session)
+        if warmed > 0:
+            logger.info(f"Warmed up MinHash LSH index with {warmed} recent articles from DB.")
+
         count_res = await session.execute(select(func.count(Article.article_id)))
         art_count = count_res.scalar() or 0
         if art_count == 0 and settings.DEMO_MODE:
@@ -89,7 +96,7 @@ app = FastAPI(
         "two-stage OSINT deduplication (SHA-256 + MinHash 128 LSH), "
         "transparent mathematical country risk scoring with 7-day exponential decay, "
         "and live threshold alerting.\n\n"
-        "**Scoring Formula**: R_c(t) = min(100, (alpha / N) * sum(w_i * |S_i| * c_i * exp(-lambda * delta_t)))"
+        "**Scoring Formula**: R_c(t) = min(100, 100 * (1 - exp(-gamma * sum(w_i * |S_i| * c_i * exp(-lambda * delta_t)))))"
     ),
     version=settings.VERSION,
     lifespan=lifespan,
@@ -152,14 +159,26 @@ app.include_router(api_router, prefix=settings.API_V1_STR)
 app.include_router(ws_router)
 
 
-@app.get("/")
-async def root():
-    return {
-        "platform": settings.PROJECT_NAME,
-        "title": settings.FULL_TITLE,
-        "version": settings.VERSION,
-        "documentation": "/docs",
-        "health": f"{settings.API_V1_STR}/health",
-        "risk_map": f"{settings.API_V1_STR}/risk/map",
-        "demo_mode": settings.DEMO_MODE,
-    }
+# Serve Production Frontend SPA if dist bundle is built
+frontend_dist = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../frontend/dist"))
+if os.path.exists(frontend_dist) and os.path.isdir(os.path.join(frontend_dist, "assets")):
+    app.mount("/assets", StaticFiles(directory=os.path.join(frontend_dist, "assets")), name="assets")
+
+    @app.get("/{full_path:path}")
+    async def serve_spa(full_path: str):
+        file_path = os.path.join(frontend_dist, full_path)
+        if full_path and os.path.isfile(file_path):
+            return FileResponse(file_path)
+        return FileResponse(os.path.join(frontend_dist, "index.html"))
+else:
+    @app.get("/")
+    async def root():
+        return {
+            "platform": settings.PROJECT_NAME,
+            "title": settings.FULL_TITLE,
+            "version": settings.VERSION,
+            "documentation": "/docs",
+            "health": f"{settings.API_V1_STR}/health",
+            "risk_map": f"{settings.API_V1_STR}/risk/map",
+            "demo_mode": settings.DEMO_MODE,
+        }

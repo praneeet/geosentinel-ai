@@ -19,15 +19,15 @@ graph TD
     end
 
     subgraph "Layer 2: AI / NLP Processing Engine"
-        E --> F1[DistilBERT 4-Class Event Classifier]
+        E --> F1[TF-IDF Logistic 4-Class Event Classifier]
         E --> F2[spaCy NER + ISO-3166-1 Alpha-3 Resolver]
         E --> F3[Sentiment & Severity Scorer in -1.0, 1.0]
-        E --> F4[BART 3-Bullet Decision-Maker Summarizer]
+        E --> F4[Extractive 3-Bullet Decision-Maker Summarizer]
         F1 & F2 & F3 & F4 --> G[Structured Event Tuples: c, k, Sa, wi, timestamp]
     end
 
     subgraph "Layer 3: Explainable Risk Scoring Engine"
-        G --> H["R_c(t) = min(100, (alpha / N) * sum(w_i * |S_i| * c_i * e^(-lambda * delta_t)))"]
+        G --> H["R_c(t) = 100 * (1 - exp(-gamma * sum(w_i * |S_i| * c_i * e^(-lambda * delta_t))))"]
         H --> I["Continuous 7-Day Half-Life Decay: lambda = ln(2)/7"]
         I --> J[Risk Tiers: Low <30, Moderate 30-60, Severe >60]
     end

@@ -6,11 +6,11 @@ from app.config import settings
 class RiskScoringEngine:
     """
     Implements the explainable closed-form mathematical country risk equation:
-    R_c(t) = min(100, (alpha / N) * sum(w_i * |S_a,i| * c_s,i * exp(-lambda * (t - t_i))))
+    R_c(t) = 100 * (1 - exp(-gamma * sum(w_i * |S_a,i| * c_s,i * exp(-lambda * (t - t_i)))))
 
     Where:
       - T = 30 days observation window
-      - alpha = 4.25 (normalization scalar)
+      - gamma = 0.07 (calibrated asymptotic crisis saturation scalar)
       - lambda = ln(2)/7 (7-day half-life decay rate)
       - w_i = domain severity weight:
           Conflict: 1.00
@@ -19,16 +19,18 @@ class RiskScoringEngine:
           Diplomacy: 0.35
       - |S_a,i| = absolute sentiment polarity [0, 1]
       - c_s,i = source credibility [0, 1]
-      - Bounded strictly within [0, 100]
+      - Bounded strictly within [0, 100] via natural exponential hazard saturation
     """
 
     def __init__(
         self,
+        gamma: float = getattr(settings, "GAMMA_SCALAR", 0.07),
         alpha: float = settings.ALPHA_SCALAR,
         lambda_decay: float = settings.LAMBDA_DECAY,
         window_days: int = settings.OBSERVATION_WINDOW_DAYS,
         weights: Dict[str, float] = None,
     ):
+        self.gamma = gamma
         self.alpha = alpha
         self.lambda_decay = lambda_decay
         self.window_days = window_days
@@ -181,19 +183,14 @@ class RiskScoringEngine:
             decay_factors.append(decay_f)
             event_impacts.append((ev.get("event_id"), decayed_c))
 
-        # Equation (1): R_c(t) = min(100, (alpha / N) * sum(...))
-        # Note: when multiple significant events happen, risk aggregates proportionally
-        raw_risk = (self.alpha / N) * sum_decayed
-        # Scale by event density factor: baseline for N=1 matches Eq. 1; N > 1 accumulates crisis pressure
-        base_density = 1.0 + math.log1p(1) * 0.45
-        if N == 1:
-            density_multiplier = base_density
+        # Closed-form Asymptotic Hazard Saturation Formulation:
+        # R_c(t) = 100 * (1 - exp(-gamma * sum_decayed))
+        # Strictly bounded within [0.0, 100.0] via continuous exponential saturation.
+        if sum_decayed <= 0.0:
+            final_risk = 0.0
         else:
-            density_multiplier = base_density * (1.0 + ((N - 1) ** 0.85) * 3.6)
-        scaled_risk = raw_risk * density_multiplier
-
-        # Strictly bounded [0.0, 100.0]
-        final_risk = round(max(0.0, min(100.0, scaled_risk)), 2)
+            final_risk = round(100.0 * (1.0 - math.exp(-self.gamma * sum_decayed)), 2)
+            final_risk = max(0.0, min(100.0, final_risk))
         tier = self.get_tier(final_risk)
         critical = self.is_critical_alert(final_risk)
 
