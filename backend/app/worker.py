@@ -17,8 +17,9 @@ async def run_standalone_worker():
     Dedicated background worker process.
     Isolates periodic OSINT ingestion and LSH memory management from web worker processes.
     """
-    logger.info("Initializing GeoSentinel database schema in worker process...")
-    await init_db()
+    if settings.ENVIRONMENT.lower() != "production":
+        logger.info("Initializing GeoSentinel database schema in worker process (dev mode)...")
+        await init_db()
 
     # 1. Warm up MinHash LSH deduplicator index
     async with async_session_factory() as session:

@@ -48,9 +48,12 @@ async def scheduled_ingestion_worker():
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application startup & shutdown events."""
-    logger.info("Initializing GeoSentinel AI schema...")
-    await init_db()
-    logger.info("Database schema initialized successfully.")
+    if settings.ENVIRONMENT.lower() != "production":
+        logger.info("Initializing GeoSentinel AI schema (dev/testing mode)...")
+        await init_db()
+        logger.info("Database schema initialized successfully.")
+    else:
+        logger.info("Production environment detected: schema lifecycle managed via Alembic migrations.")
 
     # Seed baseline demo dataset if empty and DEMO_MODE is enabled
     async with async_session_factory() as session:
@@ -72,6 +75,10 @@ async def lifespan(app: FastAPI):
             except Exception as e:
                 logger.error(f"Seeding error: {e}")
 
+    # Initialize optional Redis Pub/Sub backplane for multi-worker WebSocket synchronization
+    from app.alerts.websocket import ws_dispatcher
+    await ws_dispatcher.init_redis_pubsub()
+
     worker_task = None
     if settings.ENABLE_IN_APP_SCHEDULER:
         worker_task = asyncio.create_task(scheduled_ingestion_worker())
@@ -79,6 +86,9 @@ async def lifespan(app: FastAPI):
         logger.info("In-app background scheduler disabled.")
 
     yield
+
+    if ws_dispatcher._listener_task:
+        ws_dispatcher._listener_task.cancel()
 
     if worker_task:
         worker_task.cancel()

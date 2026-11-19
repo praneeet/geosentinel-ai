@@ -1,8 +1,4 @@
 import re
-from typing import List, Dict, Optional, Tuple
-from app.utils.iso_countries import resolve_country_iso, ALIAS_TO_ISO, COUNTRY_DATABASE
-
-import re
 import logging
 from typing import List, Dict, Optional, Tuple, Set, Any
 from app.utils.iso_countries import resolve_country_iso, ALIAS_TO_ISO, COUNTRY_DATABASE

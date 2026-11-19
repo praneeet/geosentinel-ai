@@ -207,7 +207,7 @@ async def get_country_forecast(iso: str, days: int = Query(7, ge=1, le=14), db: 
     stmt = select(CountryScore).where(CountryScore.country_iso == c_iso)
     res = await db.execute(stmt)
     score_obj = res.scalars().first()
-    cur_risk = score_obj.risk_index if score_obj else 15.0
+    cur_risk = score_obj.risk_index if score_obj else 0.0
     history_pts = await _fetch_recent_history_points(c_iso, db)
     return forecasting_engine.generate_forecast(
         current_risk=cur_risk,
@@ -225,7 +225,7 @@ async def get_country_history(iso: str, days: int = Query(30, ge=1, le=90), db: 
     stmt = select(CountryScore).where(CountryScore.country_iso == c_iso)
     res = await db.execute(stmt)
     score_obj = res.scalars().first()
-    cur_risk = score_obj.risk_index if score_obj else 15.0
+    cur_risk = score_obj.risk_index if score_obj else 0.0
 
     # Query persistent historical scores from database
     hist_stmt = (

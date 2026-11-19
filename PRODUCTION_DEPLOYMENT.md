@@ -28,11 +28,10 @@ flowchart TD
     end
 
     subgraph AsyncTier ["Async Ingestion & Processing Tier"]
-        CeleryWorker["Celery Worker Cluster (app.services.tasks)"]
-        CeleryBeat["Celery Beat Scheduler (15-min cadence)"]
-        CeleryBeat --> RedisQueue["Redis 7 (Broker & Result Backend)"]
-        RedisQueue --> CeleryWorker
-        CeleryWorker -- "Ingest Feeds" --> ExternalFeeds["OSINT Feeds (ACLED, GDELT, RSS)"]
+        DedicatedWorker["Async Ingestion Worker (python -m app.worker)"]
+        RedisBus["Redis 7 (Distributed Pub/Sub & Worker Sync)"]
+        RedisBus -.-> DedicatedWorker
+        DedicatedWorker -- "Ingest Feeds" --> ExternalFeeds["OSINT Feeds (ACLED, GDELT, RSS)"]
     end
 
     subgraph Storage ["Persistence Tier"]
@@ -166,18 +165,18 @@ RestartSec=5s
 WantedBy=multi-user.target
 ```
 
-2. **Celery Worker Service** (`/etc/systemd/system/geosentinel-worker.service`):
+2. **Background Ingestion Worker Service** (`/etc/systemd/system/geosentinel-worker.service`):
 ```ini
 [Unit]
-Description=GeoSentinel Enterprise Celery Worker & Scheduler
-After=network.target redis.service
+Description=GeoSentinel Dedicated Ingestion & LSH Deduplication Worker
+After=network.target postgresql.service redis.service
 
 [Service]
 User=geosentinel
 Group=geosentinel
 WorkingDirectory=/opt/geosentinel/backend
 EnvironmentFile=/etc/geosentinel/.env
-ExecStart=/opt/geosentinel/.venv/bin/celery -A app.services.tasks worker --beat --loglevel=INFO --concurrency=2
+ExecStart=/opt/geosentinel/.venv/bin/python -m app.worker
 Restart=always
 RestartSec=10s
 

@@ -9,32 +9,32 @@
 - **Target Metric**: Macro F1 $\ge 0.85$
 
 ## Measured Results (Holdout Test Split)
-- **Accuracy**: 86.67%
-- **Macro F1 Score**: 0.8676 (Target: $\ge 0.85$)
+- **Accuracy**: 85.00%
+- **Macro F1 Score**: 0.8453 (Target: $\ge 0.85$)
 - **Validation Status**: **Target Met**
 
 ### Detailed Category Breakdown
 ```
               precision    recall  f1-score   support
 
-    CONFLICT      0.688     1.000     0.815        11
-   DIPLOMACY      0.917     1.000     0.957        11
-     ECONOMY      1.000     0.750     0.857        12
-    SECURITY      1.000     0.727     0.842        11
+    CONFLICT      0.833     1.000     0.909        10
+   DIPLOMACY      0.714     1.000     0.833        10
+     ECONOMY      1.000     0.800     0.889        10
+    SECURITY      1.000     0.600     0.750        10
 
-    accuracy                          0.867        45
-   macro avg      0.901     0.869     0.868        45
-weighted avg      0.903     0.867     0.867        45
+    accuracy                          0.850        40
+   macro avg      0.887     0.850     0.845        40
+weighted avg      0.887     0.850     0.845        40
 
 ```
 
 ### Confusion Matrix
 Labels: `[CONFLICT, SECURITY, ECONOMY, DIPLOMACY]`
 ```
-[[11  0  0  0]
- [ 3  8  0  0]
- [ 2  0  9  1]
- [ 0  0  0 11]]
+[[10  0  0  0]
+ [ 2  6  0  2]
+ [ 0  0  8  2]
+ [ 0  0  0 10]]
 ```
 
 ## Reproducibility & Model Artifact

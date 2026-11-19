@@ -1,11 +1,5 @@
 import os
 import math
-from typing import List, Dict
-from pydantic_settings import BaseSettings
-from pydantic import Field
-
-import os
-import math
 import logging
 from typing import List, Dict
 from pydantic_settings import BaseSettings
@@ -27,6 +21,9 @@ class Settings(BaseSettings):
 
     # Database - Canonical project root SQLite path
     DATABASE_URL: str = f"sqlite+aiosqlite:///{os.path.abspath(os.path.join(os.path.dirname(__file__), '../../geosentinel.db')).replace(chr(92), '/')}"
+
+    # Redis Broker & Cache (Optional distributed Pub/Sub)
+    REDIS_URL: str = ""
 
     # Ingestion Source Keys
     NEWSAPI_KEY: str = ""

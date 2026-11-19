@@ -1,9 +1,4 @@
 import re
-from datetime import datetime, timezone, timedelta
-from typing import Dict, List, Optional, Tuple, Set
-from app.config import settings
-
-import re
 import threading
 import logging
 from datetime import datetime, timezone, timedelta
@@ -192,12 +187,6 @@ class MinHashLSHDeduplicator:
                     return "unique", None, float(best_sim)
 
             return "unique", None, 0.0
-
-deduplicator = MinHashLSHDeduplicator(
-    threshold=settings.LSH_THRESHOLD,
-    num_perm=settings.MINHASH_PERMUTATIONS,
-    window_hours=settings.DEDUP_WINDOW_HOURS,
-)
 
 deduplicator = MinHashLSHDeduplicator(
     threshold=settings.LSH_THRESHOLD,

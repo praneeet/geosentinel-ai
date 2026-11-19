@@ -48,11 +48,11 @@ def run_training_pipeline():
     y_test = [d["label"] for d in test_data]
 
     # Feature extraction & classification
-    vectorizer = TfidfVectorizer(ngram_range=(1, 2), max_features=1500)
+    vectorizer = TfidfVectorizer(ngram_range=(1, 2), max_features=3000, sublinear_tf=True)
     X_train_vec = vectorizer.fit_transform(X_train)
     X_test_vec = vectorizer.transform(X_test)
 
-    clf = LogisticRegression(C=2.0, max_iter=300, random_state=42)
+    clf = LogisticRegression(C=5.0, max_iter=500, random_state=42)
     clf.fit(X_train_vec, y_train)
 
     y_pred = clf.predict(X_test_vec)

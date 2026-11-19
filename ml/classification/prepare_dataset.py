@@ -1,11 +1,12 @@
 """
 GeoSentinel AI - ML Dataset Preparation
 Constructs stratified geopolitical text classification splits for CONFLICT, SECURITY, ECONOMY, DIPLOMACY.
+Ensures scenario-disjoint splits to strictly prevent train/test data leakage.
 AKGEC Department of IT | CSIT Group 32
 """
 import os
 import json
-from sklearn.model_selection import train_test_split
+import random
 
 CATEGORY_TEMPLATES = {
     "CONFLICT": [
@@ -24,6 +25,16 @@ CATEGORY_TEMPLATES = {
         "Trench warfare intensified as mechanized units launched coordinated counterattacks along defensive lines.",
         "Naval frigates repelled hostile explosive-laden unmanned surface vessels near offshore natural gas platforms.",
         "Anti-tank guided missiles destroyed multiple armored transport vehicles in disputed valley.",
+        "Mortar rounds struck forward radar stations as rebel factions breached the sovereign security buffer zone.",
+        "Precision glide bombs demolished fortified tunnel complexes housing heavy weapons caches.",
+        "Helicopter gunships provided continuous close air support during ground operations against armed militants.",
+        "Amphibious assault ships deployed marine contingents to reinforce contested island outposts.",
+        "Multiple rocket launcher systems conducted prolonged barrages against fortified enemy trench networks.",
+        "Sniper engagements along the armistice line resulted in fatal casualties among patrolling soldiers.",
+        "Guerrilla combatants ambushed a military supply convoy utilizing improvised explosive devices and small arms.",
+        "Surface-to-surface cruise missiles targeted energy infrastructure installations near active battle zones.",
+        "Military hospital complexes reported high casualty admissions following sustained heavy artillery barrages.",
+        "Fighter interceptors engaged hostile strike fighters attempting deep airspace penetration over contested provinces.",
     ],
     "SECURITY": [
         "State cyber defense command blocked coordinated ransomware assault targeting national power grid substations.",
@@ -41,6 +52,16 @@ CATEGORY_TEMPLATES = {
         "Defense intelligence agency issued alert regarding suspected state-sponsored cyber penetration of telecom networks.",
         "Critical infrastructure protection agency hardened water treatment facilities against remote SCADA tampering.",
         "Border security guards seized clandestine cache of automatic rifles and night-vision optics at mountain checkpoint.",
+        "Defense ministry announced emergency deployment of early warning radar arrays to monitor maritime approaches.",
+        "Homeland security agents intercepted illicit nuclear isotope shipments concealed within industrial shipping containers.",
+        "Armed forces initiated joint interoperability live-fire exercises simulating high-intensity multi-domain defense.",
+        "Intelligence task force identified state-backed APT groups conducting spear-phishing campaigns against defense contractors.",
+        "National port authority elevated maritime security tier following underwater acoustic detection of diver propulsion vehicles.",
+        "Federal communications commission revoked operating licenses for foreign communications equipment citing national security risks.",
+        "Anti-sabotage inspection teams reinforced structural security along vital cross-country petroleum pipelines.",
+        "Sovereign space command tracked foreign inspection satellites performing proximity maneuvers near defensive satellites.",
+        "Specialized bomb disposal technicians neutralized remote-detonation ordnance discovered near railway hub.",
+        "Internal affairs ministry reinforced border biometric screening protocols following intelligence threat advisory.",
     ],
     "ECONOMY": [
         "Commerce authorities enforced strict export curbs on high-end semiconductor foundry equipment and rare earth ores.",
@@ -58,6 +79,16 @@ CATEGORY_TEMPLATES = {
         "Government debt auction faced subdued institutional demand pushing 10-year sovereign bond yields to multi-year highs.",
         "Commercial air carriers rerouted international freight corridors to avoid airspace transit fees.",
         "Bilateral currency swap agreement signed between regional central banks to facilitate non-dollar trade settlement.",
+        "Ministry of finance announced sovereign debt restructuring negotiations with international creditor committees.",
+        "Global container shipping rates doubled overnight following closure of key commercial transit canals.",
+        "National stock exchange triggered automatic circuit breakers following steep selloffs in banking sector shares.",
+        "Petrochemical refineries reduced processing capacity due to embargoed crude oil feedstock delivery delays.",
+        "Trade ministry slapped punitive countervailing duties on imported electric vehicles and industrial steel.",
+        "Foreign direct investment inflows plunged to historic lows amidst heightened regulatory expropriation fears.",
+        "Agricultural commodities board warned of acute grain shortages following drought and fertilizer export restrictions.",
+        "Multilateral development bank froze concessional development loans pending sovereign fiscal governance audits.",
+        "Central bank governor intervened in foreign exchange markets selling foreign reserves to defend currency peg.",
+        "Major energy multinational declared force majeure on liquefied natural gas long-term delivery contracts.",
     ],
     "DIPLOMACY": [
         "Heads of state concluded high-level bilateral peace talks signing an enduring maritime demarcation treaty.",
@@ -75,6 +106,16 @@ CATEGORY_TEMPLATES = {
         "Joint communique reaffirmed mutual commitment to peaceful resolution of outstanding sovereignty disputes.",
         "International mediators proposed demilitarized buffer zone along contested frontier corridor.",
         "Foreign ambassadors summoned to ministry of foreign affairs to receive formal diplomatic protest note.",
+        "Plenipotentiary representatives signed comprehensive mutual extradition and legal assistance pact.",
+        "General assembly delegates adopted landmark resolution establishing multinational peacekeeping observation mandate.",
+        "State leaders held confidential bilateral retreat discussing terms for restoring severed diplomatic representation.",
+        "Foreign secretary welcomed international observer delegation monitoring parliamentary election integrity.",
+        "High-level emissaries negotiated exchange of detained diplomatic personnel following protracted backchannel talks.",
+        "Regional cooperation council established permanent secretariat to coordinate cross-border disaster protocols.",
+        "Peace negotiations resumed in neutral capital following acceptance of revised mediation framework.",
+        "Permanent representative to the UN delivered formal address urging adherence to international humanitarian law.",
+        "Government issued formal diplomatic demarche protesting extraterritorial maritime jurisdiction claims.",
+        "Trilateral working group concluded technical negotiations on shared river water sharing treaty.",
     ],
 }
 
@@ -84,24 +125,33 @@ def prepare_splits(output_dir: str = None):
         output_dir = os.path.abspath(os.path.join(base_dir, "../../data/processed"))
     os.makedirs(output_dir, exist_ok=True)
 
-    data = []
-    labels = []
-    for cat, sentences in CATEGORY_TEMPLATES.items():
-        for sent in sentences:
-            data.append(sent)
-            labels.append(cat)
-            # Add realistic news style variations
-            data.append(f"Reports confirm: {sent}")
-            labels.append(cat)
-            data.append(f"Government officials stated that {sent.lower()}")
-            labels.append(cat)
+    # Scenario-Disjoint Partitioning:
+    # We partition base templates (75% train, 25% test) before generating any stylistic variations.
+    # This guarantees ZERO data leakage between train and test splits!
+    train_data = []
+    test_data = []
 
-    X_train, X_test, y_train, y_test = train_test_split(
-        data, labels, test_size=0.25, random_state=42, stratify=labels
-    )
+    rng = random.Random(42)
 
-    train_data = [{"text": t, "label": l} for t, l in zip(X_train, y_train)]
-    test_data = [{"text": t, "label": l} for t, l in zip(X_test, y_test)]
+    for cat, base_sentences in CATEGORY_TEMPLATES.items():
+        split_idx = int(len(base_sentences) * 0.80)
+        train_templates = base_sentences[:split_idx]
+        test_templates = base_sentences[split_idx:]
+
+        # For train set: expand with diverse journalistic framing
+        for sent in train_templates:
+            train_data.append({"text": sent, "label": cat})
+            train_data.append({"text": f"Reports confirm that {sent[:1].lower() + sent[1:]}", "label": cat})
+            train_data.append({"text": f"According to defense and intelligence dispatches: {sent}", "label": cat})
+
+        # For test set: independent out-of-sample holdout test items
+        for sent in test_templates:
+            test_data.append({"text": sent, "label": cat})
+            test_data.append({"text": f"Official news wires report: {sent}", "label": cat})
+
+    # Shuffle final splits
+    rng.shuffle(train_data)
+    rng.shuffle(test_data)
 
     with open(os.path.join(output_dir, "train.json"), "w", encoding="utf-8") as f:
         json.dump(train_data, f, indent=2)
@@ -110,6 +160,7 @@ def prepare_splits(output_dir: str = None):
         json.dump(test_data, f, indent=2)
 
     print(f"Prepared {len(train_data)} train examples and {len(test_data)} test examples in {output_dir}")
+    print("Guaranteed scenario-disjoint splits: ZERO train/test data leakage.")
 
 if __name__ == "__main__":
     prepare_splits()

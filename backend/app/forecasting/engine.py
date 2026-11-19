@@ -2,10 +2,6 @@ import math
 from datetime import datetime, timezone, timedelta
 from typing import List, Dict, Any, Optional, Tuple
 
-import math
-from datetime import datetime, timezone, timedelta
-from typing import List, Dict, Any, Optional, Tuple
-
 class ForecastingEngine:
     """
     Empirical & Trend-Based Forecasting Engine.

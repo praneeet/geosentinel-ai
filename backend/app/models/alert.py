@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime, timezone
-from sqlalchemy import Column, String, Float, DateTime, JSON
+from sqlalchemy import Column, String, Float, DateTime, JSON, Index
 from app.database.base import Base
 
 class Alert(Base):
@@ -13,3 +13,7 @@ class Alert(Base):
     trigger_reason = Column(String(64), default="critical_threshold")
     payload = Column(JSON, default=dict)
     sent_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+    __table_args__ = (
+        Index("ix_alerts_country_sent_at", "country_iso", "sent_at"),
+    )

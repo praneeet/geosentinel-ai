@@ -60,7 +60,7 @@ class AlertManager:
         """
         Evaluates risk score. If R > 75 and cooldown expired,
         records the alert to the database and broadcasts over WebSocket.
-        Concurrency-protected via async mutex.
+        Strict atomic concurrency protection via async mutex covering check, persist, and cooldown update.
         """
         async with self._lock:
             now = datetime.now(timezone.utc)
@@ -71,44 +71,44 @@ class AlertManager:
                 logger.info(f"Suppressed alert for {country_iso} due to active {self.cooldown_hours}h cooldown.")
                 return None
 
-        country_info = get_country_info(country_iso)
-        country_name = country_info.get("name", country_iso)
+            country_info = get_country_info(country_iso)
+            country_name = country_info.get("name", country_iso)
 
-        top_contribs = [
-            {"category": "Conflict", "score": contributing_factors.get("conflict_score", 0)},
-            {"category": "Security", "score": contributing_factors.get("security_score", 0)},
-            {"category": "Economy", "score": contributing_factors.get("economy_score", 0)},
-            {"category": "Diplomacy", "score": contributing_factors.get("diplomacy_score", 0)},
-        ]
-        top_contribs.sort(key=lambda x: x["score"], reverse=True)
+            top_contribs = [
+                {"category": "Conflict", "score": contributing_factors.get("conflict_score", 0)},
+                {"category": "Security", "score": contributing_factors.get("security_score", 0)},
+                {"category": "Economy", "score": contributing_factors.get("economy_score", 0)},
+                {"category": "Diplomacy", "score": contributing_factors.get("diplomacy_score", 0)},
+            ]
+            top_contribs.sort(key=lambda x: x["score"], reverse=True)
 
-        alert_payload = {
-            "country": country_iso,
-            "country_name": country_name,
-            "risk_score": float(risk_score),
-            "tier": tier,
-            "trigger": "critical_threshold",
-            "timestamp": now.isoformat(),
-            "top_contributors": top_contribs,
-            "evidence": contributing_factors.get("top_event_ids", []),
-        }
+            alert_payload = {
+                "country": country_iso,
+                "country_name": country_name,
+                "risk_score": float(risk_score),
+                "tier": tier,
+                "trigger": "critical_threshold",
+                "timestamp": now.isoformat(),
+                "top_contributors": top_contribs,
+                "evidence": contributing_factors.get("top_event_ids", []),
+            }
 
-        # Persist alert record to database
-        alert_obj = Alert(
-            alert_id=str(uuid.uuid4()),
-            country_iso=country_iso,
-            risk_score=risk_score,
-            trigger_tier=tier,
-            trigger_reason="critical_threshold",
-            payload=alert_payload,
-            sent_at=now,
-        )
-        session.add(alert_obj)
-        # Commit alert to database first so it is permanently persisted before broadcast
-        await session.commit()
+            # Persist alert record to database
+            alert_obj = Alert(
+                alert_id=str(uuid.uuid4()),
+                country_iso=country_iso,
+                risk_score=risk_score,
+                trigger_tier=tier,
+                trigger_reason="critical_threshold",
+                payload=alert_payload,
+                sent_at=now,
+            )
+            session.add(alert_obj)
+            # Commit alert to database first so it is permanently persisted before broadcast
+            await session.commit()
 
-        # Update cooldown timestamp
-        self._last_alerted[country_iso] = now
+            # Update cooldown timestamp inside lock
+            self._last_alerted[country_iso] = now
 
         # Broadcast via WebSockets to connected browsers only AFTER successful persistence
         await ws_dispatcher.broadcast_alert(alert_payload)

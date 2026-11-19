@@ -1,10 +1,5 @@
 import os
 import re
-import joblib
-from typing import Dict, Tuple, Optional
-
-import os
-import re
 import logging
 import joblib
 from typing import Dict, Tuple, Optional, List
@@ -124,9 +119,5 @@ class GeoEventClassifier:
         return best_cat, round(confidence, 3), f"{self.model_version}-lexicon"
 
 # Maintain backward compatibility alias while documenting underlying architecture
-DistilBertEventClassifier = GeoEventClassifier
-classifier = GeoEventClassifier()
-
-# Maintain backward compatibility aliases
 DistilBertEventClassifier = GeoEventClassifier
 classifier = GeoEventClassifier()
