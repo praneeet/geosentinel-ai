@@ -40,7 +40,7 @@ Empirical justification of the Two-Stage Hybrid pipeline over single-stage alter
 | :--- | :---: | :---: | :---: | :---: | :---: |
 | **Stage 1 Only (SHA-256)** | 50.0% | 100.0% | **0.0% (Fails)** | **0.02 ms** | ~40,000 art/sec |
 | **Stage 2 Only (MinHash LSH)** | 100.0% | 100.0% | 100.0% | 0.85 ms | ~1,200 art/sec |
-| **Two-Stage Hybrid (GeoSentinel AI)** | **100.0%** | **100.0%** | **100.0%** | **0.40 ms** | **~2524 art/sec** |
+| **Two-Stage Hybrid (GeoSentinel AI)** | **100.0%** | **100.0%** | **100.0%** | **0.39 ms** | **~2594 art/sec** |
 
 > **Ablation Finding**: Stage 1 alone allows 50% of duplicates (syndicated wire rewrites) to leak through. Stage 2 alone catches all duplicates but imposes higher computational cost on identical copies. The **Two-Stage Hybrid** achieves $100\%$ duplicate recall while maintaining sub-millisecond execution latency.
 
@@ -66,8 +66,8 @@ Stress test executed across $N = 120$ synthetic intelligence wire updates:
 | Performance Metric | Measured Telemetry | Standard Specification |
 | :--- | :--- | :--- |
 | **Sample Size** | 120 articles | $\ge 100$ articles |
-| **Processing Throughput** | **2523.8 articles/sec** | $\ge 1000$ articles/sec |
-| **Mean Latency per Article** | **0.40 ms** | $\le 5.0$ ms |
+| **Processing Throughput** | **2593.9 articles/sec** | $\ge 1000$ articles/sec |
+| **Mean Latency per Article** | **0.39 ms** | $\le 5.0$ ms |
 | **Stage 1 Fast Path Filtration** | 30 articles (25.0%) | Sub-millisecond $O(1)$ |
 | **Stage 2 MinHash Filtration** | 22 articles (18.3%) | Sub-linear candidate lookup |
 | **Final Duplication Leakage** | **0.00%** | $< 1.0\%$ |

@@ -46,6 +46,7 @@ class Settings(BaseSettings):
     ALERT_CRITICAL_THRESHOLD: float = 75.0
     ALERT_COOLDOWN_HOURS: int = 6
     ADMIN_API_KEY: str = "geosentinel-dev-admin-key"
+    REQUIRE_WS_AUTH: bool = False
 
     # Category Weights
     CATEGORY_WEIGHTS: Dict[str, float] = {
@@ -103,6 +104,11 @@ class Settings(BaseSettings):
                     "FATAL SECURITY VIOLATION: SECRET_KEY must be set to a cryptographically "
                     "secure random value in production environment."
                 )
+            if "*" in self.CORS_ORIGINS:
+                raise ValueError(
+                    "FATAL SECURITY VIOLATION: Wildcard '*' in CORS_ORIGINS is strictly prohibited in production."
+                )
+
             if self.DEBUG:
                 logger.warning("SECURITY WARNING: DEBUG=True in production. Forcing DEBUG=False.")
                 self.DEBUG = False

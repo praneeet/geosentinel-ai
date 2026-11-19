@@ -3,7 +3,7 @@ import asyncio
 import logging
 import time
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
@@ -87,8 +87,7 @@ async def lifespan(app: FastAPI):
 
     yield
 
-    if ws_dispatcher._listener_task:
-        ws_dispatcher._listener_task.cancel()
+    await ws_dispatcher.close()
 
     if worker_task:
         worker_task.cancel()
@@ -176,10 +175,14 @@ if os.path.exists(frontend_dist) and os.path.isdir(os.path.join(frontend_dist, "
 
     @app.get("/{full_path:path}")
     async def serve_spa(full_path: str):
-        file_path = os.path.join(frontend_dist, full_path)
-        if full_path and os.path.isfile(file_path):
-            return FileResponse(file_path)
-        return FileResponse(os.path.join(frontend_dist, "index.html"))
+        # Strict path traversal prevention: ensure requested path is strictly within frontend_dist
+        safe_base = os.path.realpath(frontend_dist)
+        target_path = os.path.realpath(os.path.join(safe_base, full_path.lstrip("/\\")))
+        if not (target_path == safe_base or target_path.startswith(safe_base + os.sep)):
+            raise HTTPException(status_code=403, detail="Access denied: Path traversal detected.")
+        if full_path and os.path.isfile(target_path):
+            return FileResponse(target_path)
+        return FileResponse(os.path.join(safe_base, "index.html"))
 else:
     @app.get("/")
     async def root():

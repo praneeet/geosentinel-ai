@@ -44,7 +44,12 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
             await session.close()
 
 async def init_db():
-    """Initializes schema tables if not existing."""
+    """Initializes schema tables if not existing (dev / test mode only)."""
+    if settings.ENVIRONMENT.lower() == "production":
+        raise RuntimeError(
+            "Base.metadata.create_all() is strictly prohibited in production. "
+            "Database schema lifecycle must be managed exclusively via Alembic migrations."
+        )
     import app.models  # noqa: F401
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)

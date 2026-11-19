@@ -26,10 +26,18 @@ class AlertManager:
         self._last_alerted: Dict[str, datetime] = {}
         self._lock = asyncio.Lock()
 
+    def _to_utc_aware(self, dt: Optional[datetime]) -> Optional[datetime]:
+        """Normalizes datetimes to UTC timezone-aware to prevent naive vs aware subtraction errors."""
+        if dt is None:
+            return None
+        if dt.tzinfo is None:
+            return dt.replace(tzinfo=timezone.utc)
+        return dt.astimezone(timezone.utc)
+
     async def is_in_cooldown(self, country_iso: str, session: Optional[AsyncSession] = None, now: datetime = None) -> bool:
-        current = now or datetime.now(timezone.utc)
+        current = self._to_utc_aware(now or datetime.now(timezone.utc))
         # 1. Fast in-memory check
-        last_time = self._last_alerted.get(country_iso)
+        last_time = self._to_utc_aware(self._last_alerted.get(country_iso))
         if last_time and (current - last_time) < timedelta(hours=self.cooldown_hours):
             return True
         # 2. Persistent database check across worker processes & restarts
@@ -43,7 +51,7 @@ class AlertManager:
                 res = await session.execute(stmt)
                 existing = res.scalars().first()
                 if existing:
-                    self._last_alerted[country_iso] = existing.sent_at or current
+                    self._last_alerted[country_iso] = self._to_utc_aware(existing.sent_at) or current
                     return True
             except Exception:
                 pass

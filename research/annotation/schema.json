@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "GeoSentinelResearchArticleCorpus",
+  "description": "Standardized schema for 1,000+ real-world geopolitical news articles with multi-annotator ground truth.",
+  "type": "object",
+  "required": [
+    "article_id",
+    "source_name",
+    "source_url",
+    "published_at",
+    "collected_at",
+    "headline",
+    "body_text",
+    "country_iso",
+    "language"
+  ],
+  "properties": {
+    "article_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "source_name": {
+      "type": "string"
+    },
+    "source_url": {
+      "type": "string",
+      "format": "uri"
+    },
+    "source_credibility": {
+      "type": "number",
+      "minimum": 0.1,
+      "maximum": 1.0
+    },
+    "published_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "collected_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "headline": {
+      "type": "string",
+      "minLength": 5
+    },
+    "body_text": {
+      "type": "string",
+      "minLength": 50
+    },
+    "country_iso": {
+      "type": "string",
+      "pattern": "^[A-Z]{3}$"
+    },
+    "language": {
+      "type": "string",
+      "default": "en"
+    },
+    "content_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "annotator_1_label": {
+      "type": ["string", "null"],
+      "enum": ["CONFLICT", "SECURITY", "ECONOMY", "DIPLOMACY", null]
+    },
+    "annotator_2_label": {
+      "type": ["string", "null"],
+      "enum": ["CONFLICT", "SECURITY", "ECONOMY", "DIPLOMACY", null]
+    },
+    "adjudicated_label": {
+      "type": ["string", "null"],
+      "enum": ["CONFLICT", "SECURITY", "ECONOMY", "DIPLOMACY", null]
+    },
+    "annotation_status": {
+      "type": "string",
+      "enum": ["collected", "single_annotated", "dual_annotated", "adjudicated"]
+    },
+    "split": {
+      "type": ["string", "null"],
+      "enum": ["train", "validation", "test", null]
+    }
+  }
+}

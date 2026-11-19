@@ -166,18 +166,44 @@ docker compose -f docker-compose.prod.yml up -d --build
 
 ## 7. Testing & Verification
 
+GeoSentinel AI maintains rigorous test coverage spanning unit, integration, database hardening, and distributed WebSocket synchronization:
+
 ```bash
-# Run backend test suite
+# Run the complete backend test suite (51 passing tests)
 python -m pytest -v
 
-# Verify live endpoints
-python scripts/verify_endpoints.py
+# Run 100-user concurrent load test benchmark
+python scripts/load_test.py
 
-# Build frontend
+# Run ML classification & scenario-disjoint evaluation
+python ml/classification/train_classifier.py
+
+# Run ACLED time-series forecasting benchmark
+python ml/forecasting/acled_benchmark.py
+
+# Run LSH deduplication benchmarks
+python research/evaluation/evaluate_dedup.py
+
+# Run ROUGE extractive summarization evaluation
+python ml/summarization/evaluate_rouge.py
+
+# Run multi-annotator agreement pipeline
+python research/annotation/compute_agreement.py
+
+# Build frontend production bundle
 cd frontend && npm run build
 ```
 
 ---
 
-## 8. License
+## 8. Documentation & Guides
+
+- [DEVELOPMENT.md](DEVELOPMENT.md): Complete local setup instructions, database migrations, running tests, and troubleshooting guide.
+- [PRODUCTION_DEPLOYMENT.md](PRODUCTION_DEPLOYMENT.md): Enterprise deployment runbook, Gunicorn/Uvicorn, Redis Pub/Sub WebSocket sync, security checklist, and Prometheus telemetry.
+- [Annotation Guidelines](research/annotation/ANNOTATION_GUIDELINES.md): Academic taxonomy and criteria for human labeling of real-world OSINT news articles.
+- [Research Evaluation Reports](research/evaluation/): Empirical metrics for classification, forecasting, deduplication, summarization, and multi-annotator agreement.
+
+---
+
+## 9. License
 MIT License — see [LICENSE](LICENSE).

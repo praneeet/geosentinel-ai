@@ -20,6 +20,23 @@ services:
           cpus: "2.0"
           memory: 2048M
 
+  redis:
+    image: redis:7-alpine
+    container_name: geosentinel-prod-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+
   backend:
     build:
       context: ./backend
@@ -30,6 +47,7 @@ services:
       - ENVIRONMENT=production
       - DEBUG=False
       - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-geosentinel_admin}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-geosentinel_production}
+      - REDIS_URL=redis://redis:6379/0
       - ENABLE_IN_APP_SCHEDULER=false
       - DEMO_MODE=False
       - RUN_MIGRATIONS=true
@@ -43,6 +61,8 @@ services:
       - WEBHOOKS_ENABLED=${WEBHOOKS_ENABLED:-false}
     depends_on:
       postgres:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     deploy:
       resources:
@@ -61,6 +81,7 @@ services:
       - ENVIRONMENT=production
       - DEBUG=False
       - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-geosentinel_admin}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-geosentinel_production}
+      - REDIS_URL=redis://redis:6379/0
       - ENABLE_IN_APP_SCHEDULER=false
       - DEMO_MODE=False
       - RUN_MIGRATIONS=false
@@ -73,6 +94,8 @@ services:
       - WEBHOOKS_ENABLED=${WEBHOOKS_ENABLED:-false}
     depends_on:
       postgres:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     deploy:
       resources:
