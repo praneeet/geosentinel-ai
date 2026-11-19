@@ -562,7 +562,7 @@ export default function CountryDetailsModal({
                       </button>
                     </div>
 
-                    {trajectoryMode === 'history' && (
+                    {trajectoryMode === 'history' ? (
                       <div className="flex items-center gap-1 text-[11px] font-mono">
                         {[7, 14, 30].map((d) => (
                           <button
@@ -578,102 +578,153 @@ export default function CountryDetailsModal({
                           </button>
                         ))}
                       </div>
+                    ) : (
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#070D17] text-purple-300 border border-purple-900/40">
+                        {forecastData[0]?.model_used === 'naive_persistence'
+                          ? 'Persistence Baseline'
+                          : 'Holt-Winters (95% CI)'}
+                      </span>
                     )}
                   </div>
 
                   <div className="flex-1 w-full mt-2">
-                    <ResponsiveContainer width="100%" height="100%">
-                      {trajectoryMode === 'forecast' ? (
-                        <LineChart data={forecastData}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="rgba(148, 163, 184, 0.08)" vertical={false} />
-                          <XAxis
-                            dataKey="timestamp"
-                            stroke="#476999"
-                            fontSize={10}
-                            tickLine={false}
-                            tickFormatter={(val) => {
-                              const d = new Date(val);
-                              return `${d.getMonth() + 1}/${d.getDate()}`;
-                            }}
-                          />
-                          <YAxis stroke="#476999" domain={[0, 100]} fontSize={10} tickLine={false} />
-                          <Tooltip
-                            contentStyle={{
-                              background: '#070D17',
-                              borderColor: 'rgba(148, 163, 184, 0.2)',
-                              fontSize: '11px',
-                              color: '#F1F5F9',
-                              borderRadius: '8px',
-                            }}
-                            labelFormatter={(l) => `Forecast: ${new Date(l).toLocaleDateString()}`}
-                            formatter={(val) => [`${Number(val).toFixed(1)} / 100`, 'Projected Risk']}
-                          />
-                          <ReferenceLine
-                            y={75}
-                            stroke="#EF4444"
-                            strokeDasharray="3 3"
-                            label={{
-                              value: 'Alert Threshold (75)',
-                              fill: '#EF4444',
-                              fontSize: 10,
-                              position: 'insideTopLeft',
-                            }}
-                          />
-                          <Line
-                            type="monotone"
-                            dataKey="forecast_risk"
-                            stroke="#C084FC"
-                            strokeWidth={2.5}
-                            dot={{ fill: '#C084FC', r: 3 }}
-                            name="Projected Risk"
-                          />
-                        </LineChart>
+                    {trajectoryMode === 'forecast' ? (
+                      forecastData.length === 0 ? (
+                        <div className="h-full flex flex-col items-center justify-center text-slate-400 font-mono text-xs">
+                          <TrendingUp className="w-7 h-7 text-slate-600 mb-2" />
+                          <span>No projection available for {iso}.</span>
+                          <span className="text-[10px] text-slate-400 mt-1">
+                            Awaiting minimum telemetry observations for statistical extrapolation.
+                          </span>
+                        </div>
                       ) : (
-                        <LineChart data={historyData}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="rgba(148, 163, 184, 0.08)" vertical={false} />
-                          <XAxis
-                            dataKey="timestamp"
-                            stroke="#476999"
-                            fontSize={10}
-                            tickLine={false}
-                            tickFormatter={(val) =>
-                              new Date(val).toLocaleDateString(undefined, { month: 'numeric', day: 'numeric' })
-                            }
-                          />
-                          <YAxis stroke="#476999" domain={[0, 100]} fontSize={10} tickLine={false} />
-                          <Tooltip
-                            contentStyle={{
-                              background: '#070D17',
-                              borderColor: 'rgba(148, 163, 184, 0.2)',
-                              fontSize: '11px',
-                              color: '#F1F5F9',
-                              borderRadius: '8px',
-                            }}
-                            labelFormatter={(l) => new Date(l).toLocaleString()}
-                            formatter={(val) => [`${Number(val).toFixed(1)} / 100`, 'Historical Risk']}
-                          />
-                          <ReferenceLine
-                            y={75}
-                            stroke="#EF4444"
-                            strokeDasharray="3 3"
-                            label={{
-                              value: 'Alert Threshold (75)',
-                              fill: '#EF4444',
-                              fontSize: 10,
-                              position: 'insideTopLeft',
-                            }}
-                          />
-                          <Line
-                            type="monotone"
-                            dataKey="risk_score"
-                            stroke="#38BDF8"
-                            strokeWidth={2.5}
-                            dot={false}
-                            name="Historical Risk"
-                          />
-                        </LineChart>
-                      )}
-                    </ResponsiveContainer>
+                        <ResponsiveContainer width="100%" height="100%">
+                          <LineChart data={forecastData}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(148, 163, 184, 0.08)" vertical={false} />
+                            <XAxis
+                              dataKey="timestamp"
+                              stroke="#476999"
+                              fontSize={10}
+                              tickLine={false}
+                              tickFormatter={(val) => {
+                                const d = new Date(val);
+                                return `${d.getMonth() + 1}/${d.getDate()}`;
+                              }}
+                            />
+                            <YAxis stroke="#476999" domain={[0, 100]} fontSize={10} tickLine={false} />
+                            <Tooltip
+                              contentStyle={{
+                                background: '#070D17',
+                                borderColor: 'rgba(148, 163, 184, 0.2)',
+                                fontSize: '11px',
+                                color: '#F1F5F9',
+                                borderRadius: '8px',
+                              }}
+                              labelFormatter={(l) => `Forecast: ${new Date(l).toLocaleDateString()}`}
+                              formatter={(val, name) => {
+                                const num = Number(val).toFixed(1);
+                                if (name === 'Upper 95% CI') return [`${num} / 100`, 'Upper Bound (95% CI)'];
+                                if (name === 'Lower 95% CI') return [`${num} / 100`, 'Lower Bound (95% CI)'];
+                                return [`${num} / 100`, 'Projected Risk'];
+                              }}
+                            />
+                            <ReferenceLine
+                              y={75}
+                              stroke="#EF4444"
+                              strokeDasharray="3 3"
+                              label={{
+                                value: 'Alert Threshold (75)',
+                                fill: '#EF4444',
+                                fontSize: 10,
+                                position: 'insideTopLeft',
+                              }}
+                            />
+                            <Line
+                              type="monotone"
+                              dataKey="confidence_upper"
+                              stroke="#A855F7"
+                              strokeWidth={1}
+                              strokeDasharray="3 3"
+                              dot={false}
+                              name="Upper 95% CI"
+                            />
+                            <Line
+                              type="monotone"
+                              dataKey="forecast_risk"
+                              stroke="#C084FC"
+                              strokeWidth={2.5}
+                              dot={{ fill: '#C084FC', r: 3 }}
+                              name="Projected Risk"
+                            />
+                            <Line
+                              type="monotone"
+                              dataKey="confidence_lower"
+                              stroke="#A855F7"
+                              strokeWidth={1}
+                              strokeDasharray="3 3"
+                              dot={false}
+                              name="Lower 95% CI"
+                            />
+                          </LineChart>
+                        </ResponsiveContainer>
+                      )
+                    ) : (
+                      historyData.length === 0 ? (
+                        <div className="h-full flex flex-col items-center justify-center text-slate-400 font-mono text-xs">
+                          <Clock className="w-7 h-7 text-slate-600 mb-2" />
+                          <span>No historical baseline recorded in {historyRange}d window.</span>
+                          <span className="text-[10px] text-slate-400 mt-1">
+                            Observed time-series points are logged after verified ingestion cycles.
+                          </span>
+                        </div>
+                      ) : (
+                        <ResponsiveContainer width="100%" height="100%">
+                          <LineChart data={historyData}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(148, 163, 184, 0.08)" vertical={false} />
+                            <XAxis
+                              dataKey="timestamp"
+                              stroke="#476999"
+                              fontSize={10}
+                              tickLine={false}
+                              tickFormatter={(val) =>
+                                new Date(val).toLocaleDateString(undefined, { month: 'numeric', day: 'numeric' })
+                              }
+                            />
+                            <YAxis stroke="#476999" domain={[0, 100]} fontSize={10} tickLine={false} />
+                            <Tooltip
+                              contentStyle={{
+                                background: '#070D17',
+                                borderColor: 'rgba(148, 163, 184, 0.2)',
+                                fontSize: '11px',
+                                color: '#F1F5F9',
+                                borderRadius: '8px',
+                              }}
+                              labelFormatter={(l) => new Date(l).toLocaleString()}
+                              formatter={(val) => [`${Number(val).toFixed(1)} / 100`, 'Historical Risk']}
+                            />
+                            <ReferenceLine
+                              y={75}
+                              stroke="#EF4444"
+                              strokeDasharray="3 3"
+                              label={{
+                                value: 'Alert Threshold (75)',
+                                fill: '#EF4444',
+                                fontSize: 10,
+                                position: 'insideTopLeft',
+                              }}
+                            />
+                            <Line
+                              type="monotone"
+                              dataKey="risk_score"
+                              stroke="#38BDF8"
+                              strokeWidth={2.5}
+                              dot={false}
+                              name="Historical Risk"
+                            />
+                          </LineChart>
+                        </ResponsiveContainer>
+                      )
+                    )}
                   </div>
                 </div>
 

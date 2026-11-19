@@ -1,4 +1,5 @@
 import uuid
+import asyncio
 import logging
 from datetime import datetime, timezone, timedelta
 from typing import Dict, Any, Optional
@@ -16,12 +17,14 @@ class AlertManager:
     """
     Handles alert deduplication, cooldown windows, persistent logging,
     and WebSocket broadcasting when country risk breaches critical threshold R > 75.
+    Thread and concurrency safe.
     """
 
     def __init__(self, cooldown_hours: int = settings.ALERT_COOLDOWN_HOURS):
         self.cooldown_hours = cooldown_hours
         # In-memory fast cache for country last-alert timestamps: {country_iso: datetime}
         self._last_alerted: Dict[str, datetime] = {}
+        self._lock = asyncio.Lock()
 
     async def is_in_cooldown(self, country_iso: str, session: Optional[AsyncSession] = None, now: datetime = None) -> bool:
         current = now or datetime.now(timezone.utc)
@@ -57,14 +60,16 @@ class AlertManager:
         """
         Evaluates risk score. If R > 75 and cooldown expired,
         records the alert to the database and broadcasts over WebSocket.
+        Concurrency-protected via async mutex.
         """
-        now = datetime.now(timezone.utc)
-        if risk_score <= settings.ALERT_CRITICAL_THRESHOLD:
-            return None
+        async with self._lock:
+            now = datetime.now(timezone.utc)
+            if risk_score <= settings.ALERT_CRITICAL_THRESHOLD:
+                return None
 
-        if await self.is_in_cooldown(country_iso, session=session, now=now):
-            logger.info(f"Suppressed alert for {country_iso} due to active {self.cooldown_hours}h cooldown.")
-            return None
+            if await self.is_in_cooldown(country_iso, session=session, now=now):
+                logger.info(f"Suppressed alert for {country_iso} due to active {self.cooldown_hours}h cooldown.")
+                return None
 
         country_info = get_country_info(country_iso)
         country_name = country_info.get("name", country_iso)
@@ -99,13 +104,15 @@ class AlertManager:
             sent_at=now,
         )
         session.add(alert_obj)
+        # Commit alert to database first so it is permanently persisted before broadcast
+        await session.commit()
 
         # Update cooldown timestamp
         self._last_alerted[country_iso] = now
 
-        # Broadcast via WebSockets to connected browsers
+        # Broadcast via WebSockets to connected browsers only AFTER successful persistence
         await ws_dispatcher.broadcast_alert(alert_payload)
-        logger.info(f"Dispatched critical alert for {country_iso} (Risk: {risk_score})")
+        logger.info(f"Dispatched critical alert for {country_iso} (Risk: {risk_score:.1f})")
 
         # Broadcast via Discord & Telegram External Webhooks
         try:

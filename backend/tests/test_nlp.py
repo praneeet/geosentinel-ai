@@ -53,3 +53,46 @@ def test_executive_summarizer_three_bullet_format():
     assert bullets[0].startswith("Key development:")
     assert bullets[1].startswith("Strategic significance:")
     assert bullets[2].startswith("Geopolitical implication:")
+
+def test_contextual_multi_country_attribution():
+    """Verify actor vs affected country attribution in multi-country geopolitical news."""
+    title = "Russian forces launched missile strikes targeting infrastructure in Ukraine"
+    body = "Artillery and drone barrages struck Kharkiv regional energy facilities."
+    attr = entity_extractor.extract_country_attributions(title, body)
+
+    assert attr["primary_country_iso"] == "UKR"
+    assert "UKR" in attr["affected_countries"]
+    assert "RUS" in attr["actor_countries"]
+    assert attr["is_multi_country"] is True
+    assert attr["attribution_confidence"] > 0.65
+
+def test_multi_country_diplomatic_attribution():
+    """Verify primary country resolution does not blindly pick the first mentioned entity."""
+    # US is mentioned first, but Taiwan is the affected theater of operations
+    title = "United States dispatched military assistance package to Taiwan amid regional naval exercises"
+    body = "Defense officials confirmed shipments intended to bolster Taiwan Strait defensive cordons."
+    resolved = entity_extractor.resolve_primary_country(title, body)
+    assert resolved == "TWN"
+
+def test_classifier_uncertain_on_empty_or_vague_input():
+    """Verify classifier returns UNCERTAIN rather than guessing on insufficient signals."""
+    cat, conf, _ = classifier.predict("")
+    assert cat == "UNCERTAIN"
+    assert conf == 0.0
+
+    cat2, conf2, _ = classifier.predict("Hello world today is a fine day.")
+    assert cat2 == "UNCERTAIN"
+
+def test_summarizer_title_only_factual_integrity():
+    """Verify summarizer does not hallucinate kinetic escalation on title-only dispatches."""
+    bullets = summarizer.generate_bullet_briefing(
+        title="Bilateral negotiations concluded in Geneva",
+        body_text="",
+        category="DIPLOMACY",
+        country_name="Switzerland",
+    )
+    assert len(bullets) == 3
+    assert "Geneva" in bullets[0]
+    # Bullet 2 should not invent casualties or military maneuvers
+    assert "missile" not in bullets[1].lower()
+    assert "casualt" not in bullets[1].lower()

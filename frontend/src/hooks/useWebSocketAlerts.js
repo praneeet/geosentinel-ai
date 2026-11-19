@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 
 const WS_BASE =
   import.meta.env.VITE_WS_URL ||
@@ -11,18 +11,45 @@ export function useWebSocketAlerts(onAlertReceived) {
   const [latestAlert, setLatestAlert] = useState(null);
   const wsRef = useRef(null);
   const reconnectTimeoutRef = useRef(null);
+  const retryCountRef = useRef(0);
+  const seenAlertIdsRef = useRef(new Set());
+  const callbackRef = useRef(onAlertReceived);
+
+  // Keep callback ref fresh without triggering reconnect effect
+  useEffect(() => {
+    callbackRef.current = onAlertReceived;
+  }, [onAlertReceived]);
 
   useEffect(() => {
     let isMounted = true;
 
+    function scheduleReconnect() {
+      if (!isMounted) return;
+      retryCountRef.current += 1;
+      // Exponential backoff with jitter: min 1s, max 30s, +/- 20% random jitter
+      const baseDelay = Math.min(30000, 1000 * Math.pow(1.5, retryCountRef.current));
+      const jitter = 0.8 + Math.random() * 0.4;
+      const delay = Math.round(baseDelay * jitter);
+
+      if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
+      reconnectTimeoutRef.current = setTimeout(() => {
+        if (isMounted) connect();
+      }, delay);
+    }
+
     function connect() {
       try {
+        if (wsRef.current && (wsRef.current.readyState === WebSocket.CONNECTING || wsRef.current.readyState === WebSocket.OPEN)) {
+          return;
+        }
+
         const ws = new WebSocket(WS_BASE);
         wsRef.current = ws;
 
         ws.onopen = () => {
           if (!isMounted) return;
           setIsConnected(true);
+          retryCountRef.current = 0; // reset retry backoff on successful connection
           console.log("[GeoSentinel WS] Connected to live alert engine.");
         };
 
@@ -30,29 +57,44 @@ export function useWebSocketAlerts(onAlertReceived) {
           if (!isMounted) return;
           try {
             const data = JSON.parse(event.data);
+            // Deduplicate incoming alert broadcasts
+            const dedupeKey = data.alert_id || `${data.country}-${data.timestamp}`;
+            if (dedupeKey && seenAlertIdsRef.current.has(dedupeKey)) {
+              return;
+            }
+            if (dedupeKey) {
+              seenAlertIdsRef.current.add(dedupeKey);
+              // Cap seen set to prevent memory growth
+              if (seenAlertIdsRef.current.size > 200) {
+                const arr = Array.from(seenAlertIdsRef.current);
+                seenAlertIdsRef.current = new Set(arr.slice(-100));
+              }
+            }
+
             setLatestAlert(data);
-            if (onAlertReceived) {
-              onAlertReceived(data);
+            if (callbackRef.current) {
+              callbackRef.current(data);
             }
           } catch (err) {
-            console.warn("[GeoSentinel WS] Non-JSON message received:", event.data);
+            console.debug("[GeoSentinel WS] Heartbeat / non-alert message:", event.data);
           }
         };
 
         ws.onclose = () => {
           if (!isMounted) return;
           setIsConnected(false);
-          console.log("[GeoSentinel WS] Connection lost. Reconnecting in 3 seconds...");
-          reconnectTimeoutRef.current = setTimeout(connect, 3000);
+          scheduleReconnect();
         };
 
         ws.onerror = (err) => {
-          console.error("[GeoSentinel WS] Socket error:", err);
-          ws.close();
+          console.warn("[GeoSentinel WS] Socket error:", err);
+          try {
+            ws.close();
+          } catch (_) {}
         };
       } catch (e) {
         if (isMounted) {
-          reconnectTimeoutRef.current = setTimeout(connect, 3000);
+          scheduleReconnect();
         }
       }
     }
@@ -62,7 +104,9 @@ export function useWebSocketAlerts(onAlertReceived) {
     // Keepalive ping interval
     const pingInterval = setInterval(() => {
       if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-        wsRef.current.send("ping");
+        try {
+          wsRef.current.send("ping");
+        } catch (_) {}
       }
     }, 25000);
 
@@ -70,7 +114,11 @@ export function useWebSocketAlerts(onAlertReceived) {
       isMounted = false;
       clearInterval(pingInterval);
       if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
-      if (wsRef.current) wsRef.current.close();
+      if (wsRef.current) {
+        try {
+          wsRef.current.close();
+        } catch (_) {}
+      }
     };
   }, []);
 

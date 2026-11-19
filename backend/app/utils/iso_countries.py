@@ -41,37 +41,37 @@ COUNTRY_DATABASE: Dict[str, Dict] = {
 ALIAS_TO_ISO: Dict[str, str] = {
     # USA
     "united states": "USA", "united states of america": "USA", "us": "USA", "u.s.": "USA",
-    "u.s.a.": "USA", "usa": "USA", "america": "USA", "washington": "USA", "pentagon": "USA", "white house": "USA",
+    "u.s.a.": "USA", "usa": "USA", "america": "USA", "american": "USA", "washington": "USA", "pentagon": "USA", "white house": "USA",
     # India
-    "india": "IND", "bharat": "IND", "ind": "IND", "new delhi": "IND", "delhi": "IND",
+    "india": "IND", "bharat": "IND", "ind": "IND", "indian": "IND", "new delhi": "IND", "delhi": "IND",
     # China
-    "china": "CHN", "people's republic of china": "CHN", "prc": "CHN", "beijing": "CHN", "chn": "CHN",
+    "china": "CHN", "people's republic of china": "CHN", "prc": "CHN", "chinese": "CHN", "beijing": "CHN", "chn": "CHN",
     # Russia
-    "russia": "RUS", "russian federation": "RUS", "moscow": "RUS", "kremlin": "RUS", "rus": "RUS",
+    "russia": "RUS", "russian": "RUS", "russian federation": "RUS", "moscow": "RUS", "kremlin": "RUS", "rus": "RUS",
     # Ukraine
-    "ukraine": "UKR", "kyiv": "UKR", "kiev": "UKR", "ukr": "UKR", "donbas": "UKR", "crimea": "UKR",
+    "ukraine": "UKR", "ukrainian": "UKR", "kyiv": "UKR", "kiev": "UKR", "ukr": "UKR", "donbas": "UKR", "crimea": "UKR",
     # Taiwan
-    "taiwan": "TWN", "taipei": "TWN", "republic of china": "TWN", "twn": "TWN",
+    "taiwan": "TWN", "taiwanese": "TWN", "taipei": "TWN", "republic of china": "TWN", "twn": "TWN",
     # Israel
-    "israel": "ISR", "tel aviv": "ISR", "jerusalem": "ISR", "idf": "ISR", "isr": "ISR",
+    "israel": "ISR", "israeli": "ISR", "tel aviv": "ISR", "jerusalem": "ISR", "idf": "ISR", "isr": "ISR",
     # Palestine
-    "palestine": "PSE", "gaza": "PSE", "west bank": "PSE", "ramallah": "PSE", "pse": "PSE",
+    "palestine": "PSE", "palestinian": "PSE", "gaza": "PSE", "west bank": "PSE", "ramallah": "PSE", "pse": "PSE",
     # Iran
-    "iran": "IRN", "islamic republic of iran": "IRN", "tehran": "IRN", "irn": "IRN",
+    "iran": "IRN", "iranian": "IRN", "islamic republic of iran": "IRN", "tehran": "IRN", "irn": "IRN",
     # Pakistan
-    "pakistan": "PAK", "islamabad": "PAK", "pak": "PAK",
+    "pakistan": "PAK", "pakistani": "PAK", "islamabad": "PAK", "pak": "PAK",
     # Germany
-    "germany": "DEU", "berlin": "DEU", "deu": "DEU", "deutschland": "DEU",
+    "germany": "DEU", "german": "DEU", "berlin": "DEU", "deu": "DEU", "deutschland": "DEU",
     # United Kingdom
-    "united kingdom": "GBR", "uk": "GBR", "u.k.": "GBR", "britain": "GBR", "great britain": "GBR", "london": "GBR", "gbr": "GBR",
+    "united kingdom": "GBR", "british": "GBR", "uk": "GBR", "u.k.": "GBR", "britain": "GBR", "great britain": "GBR", "london": "GBR", "gbr": "GBR",
     # France
-    "france": "FRA", "paris": "FRA", "fra": "FRA",
+    "france": "FRA", "french": "FRA", "paris": "FRA", "fra": "FRA",
     # Syria
-    "syria": "SYR", "damascus": "SYR", "syr": "SYR",
+    "syria": "SYR", "syrian": "SYR", "damascus": "SYR", "syr": "SYR",
     # Turkey
-    "turkey": "TUR", "türkiye": "TUR", "ankara": "TUR", "tur": "TUR",
+    "turkey": "TUR", "turkish": "TUR", "türkiye": "TUR", "ankara": "TUR", "tur": "TUR",
     # Saudi Arabia
-    "saudi arabia": "SAU", "riyadh": "SAU", "sau": "SAU",
+    "saudi arabia": "SAU", "saudi": "SAU", "riyadh": "SAU", "sau": "SAU",
     # Yemen
     "yemen": "YEM", "sanaa": "YEM", "yem": "YEM", "houthi": "YEM",
     # Japan

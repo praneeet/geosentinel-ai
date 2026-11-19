@@ -7,7 +7,7 @@ class CountryScore(Base):
     __tablename__ = "country_scores"
 
     score_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    country_iso = Column(String(3), nullable=False, index=True)
+    country_iso = Column(String(3), nullable=False, unique=True, index=True)
     risk_index = Column(Float, nullable=False)  # [0.0, 100.0]
     decayed_agg = Column(Float, nullable=False)
     risk_tier = Column(String(16), nullable=False, index=True)  # Low, Moderate, Severe

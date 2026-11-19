@@ -32,7 +32,8 @@ services:
       - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-geosentinel_admin}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-geosentinel_production}
       - ENABLE_IN_APP_SCHEDULER=false
       - DEMO_MODE=False
-      - ADMIN_API_KEY=${ADMIN_API_KEY:-geosentinel-admin-secret}
+      - ADMIN_API_KEY=${ADMIN_API_KEY:?Set strong ADMIN_API_KEY in .env}
+      - SECRET_KEY=${SECRET_KEY:?Set strong SECRET_KEY in .env}
       - NEWSAPI_KEY=${NEWSAPI_KEY:-}
       - MEDIASTACK_KEY=${MEDIASTACK_KEY:-}
       - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL:-}
@@ -61,6 +62,7 @@ services:
       - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-geosentinel_admin}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-geosentinel_production}
       - ENABLE_IN_APP_SCHEDULER=false
       - DEMO_MODE=False
+      - SECRET_KEY=${SECRET_KEY:?Set strong SECRET_KEY in .env}
       - NEWSAPI_KEY=${NEWSAPI_KEY:-}
       - MEDIASTACK_KEY=${MEDIASTACK_KEY:-}
       - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL:-}

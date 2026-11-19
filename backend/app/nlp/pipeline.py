@@ -28,13 +28,14 @@ class NLPPipeline:
         # 1. Event Classification (TF-IDF + Calibrated Lexicon)
         category, confidence, model_ver = self.classifier.predict(combined_text)
 
-        # 2. Entity Extraction & ISO-3166 Resolution (spaCy)
+        # 2. Entity Extraction & Context-Aware Country Attribution
         entities = self.entity_extractor.extract_entities(combined_text)
-        country_iso = self.entity_extractor.resolve_primary_country(
+        attribution = self.entity_extractor.extract_country_attributions(
             title=title,
             body_text=body_text,
             country_hint=country_hint,
         )
+        country_iso = attribution["primary_country_iso"]
         country_info = get_country_info(country_iso)
 
         # 3. Sentiment & Severity Analysis
@@ -45,8 +46,8 @@ class NLPPipeline:
             text=combined_text,
         )
 
-        # 4. Executive Summarization (Extractive 3-Bullet Engine)
-        bullet_points = self.summarizer.generate_bullet_briefing(
+        # 4. Executive Summarization (Structured Briefing Engine)
+        summary_result = self.summarizer.generate_structured_summary(
             title=title,
             body_text=body_text,
             category=category,
@@ -59,10 +60,16 @@ class NLPPipeline:
             "model_version": model_ver,
             "country_iso": country_iso,
             "country_name": country_info.get("name", country_iso),
+            "affected_countries": attribution.get("affected_countries", [country_iso]),
+            "actor_countries": attribution.get("actor_countries", []),
+            "mentioned_countries": attribution.get("mentioned_countries", [country_iso]),
+            "attribution_confidence": attribution.get("attribution_confidence", 0.85),
+            "is_multi_country": attribution.get("is_multi_country", False),
+            "attribution_evidence": attribution.get("supporting_evidence", ""),
             "sentiment": sentiment,
             "severity": severity,
             "entities": entities,
-            "bullet_points": bullet_points,
+            "bullet_points": summary_result["bullet_points"],
             "timestamp": article_data.get("published_at") or datetime.now(timezone.utc),
         }
 

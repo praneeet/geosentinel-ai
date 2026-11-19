@@ -111,3 +111,98 @@ def test_category_weight_hierarchy():
     assert s_score == 0.80
     assert e_score == 0.55
     assert d_score == 0.35
+
+def test_positive_vs_negative_sentiment_separation():
+    """Verify positive de-escalation does not create artificial risk spikes."""
+    engine = RiskScoringEngine()
+    now = datetime.now(timezone.utc)
+
+    # Positive event (peace accord, de-escalation: sentiment = +0.90)
+    pos_decayed, _, _ = engine.calculate_single_event_weight(
+        category="DIPLOMACY",
+        sentiment=0.90,
+        severity=0.80,
+        credibility=1.0,
+        event_time=now,
+        current_time=now,
+    )
+
+    # Negative event (crisis, shelling: sentiment = -0.90)
+    neg_decayed, _, _ = engine.calculate_single_event_weight(
+        category="DIPLOMACY",
+        sentiment=-0.90,
+        severity=0.80,
+        credibility=1.0,
+        event_time=now,
+        current_time=now,
+    )
+
+    assert neg_decayed > pos_decayed
+    # Positive sentiment threat multiplier is (1 - 0.90)/2 = 0.05
+    # Negative sentiment threat multiplier is (1 - (-0.90))/2 = 0.95
+    assert neg_decayed / (pos_decayed + 1e-9) > 10.0
+
+def test_future_dated_events_quarantined():
+    """Verify events with future timestamps are quarantined and do not inflate risk."""
+    engine = RiskScoringEngine()
+    now = datetime.now(timezone.utc)
+    future_time = now + timedelta(days=5.0)
+
+    res = engine.calculate_single_event_weight(
+        category="CONFLICT",
+        sentiment=-1.0,
+        credibility=1.0,
+        event_time=future_time,
+        current_time=now,
+    )
+    decayed, raw, _ = res
+    assert decayed == 0.0
+    assert raw == 0.0
+
+def test_input_dictionary_not_mutated():
+    """Verify calculate_country_risk does not mutate caller's event dictionary."""
+    engine = RiskScoringEngine()
+    now = datetime.now(timezone.utc)
+    orig_time = now - timedelta(days=2.0)
+    event_dict = {
+        "event_id": "test_ev",
+        "category": "SECURITY",
+        "sentiment": -0.5,
+        "credibility": 0.9,
+        "timestamp": orig_time,
+    }
+    events = [event_dict]
+    _ = engine.calculate_country_risk(events, current_time=now)
+    assert event_dict["timestamp"] == orig_time
+    assert "timestamp_utc" not in event_dict
+
+def test_category_contributions_sum_matches_final_risk():
+    """Verify sum of category contribution scores precisely matches final risk index."""
+    engine = RiskScoringEngine()
+    now = datetime.now(timezone.utc)
+    events = [
+        {"event_id": "e1", "category": "CONFLICT", "sentiment": -0.8, "severity": 0.9, "credibility": 0.9, "timestamp": now},
+        {"event_id": "e2", "category": "SECURITY", "sentiment": -0.6, "severity": 0.7, "credibility": 0.85, "timestamp": now - timedelta(days=3)},
+        {"event_id": "e3", "category": "ECONOMY", "sentiment": -0.4, "severity": 0.5, "credibility": 0.8, "timestamp": now - timedelta(days=5)},
+        {"event_id": "e4", "category": "DIPLOMACY", "sentiment": -0.3, "severity": 0.4, "credibility": 0.9, "timestamp": now - timedelta(days=1)},
+    ]
+    res = engine.calculate_country_risk(events, current_time=now)
+    cf = res["contributing_factors"]
+    cat_sum = round(cf["conflict_score"] + cf["security_score"] + cf["economy_score"] + cf["diplomacy_score"], 2)
+    assert cat_sum == res["risk_index"]
+
+def test_invalid_and_missing_data_handled_safely():
+    """Verify engine handles malformed, None, or empty event items safely."""
+    engine = RiskScoringEngine()
+    now = datetime.now(timezone.utc)
+    malformed = [
+        None,
+        {},
+        {"category": "INVALID", "sentiment": "bad", "timestamp": None},
+        {"category": "CONFLICT", "sentiment": -0.8, "timestamp": "not-a-datetime"},
+        {"category": "SECURITY", "sentiment": -0.5, "credibility": "high", "timestamp": now},
+    ]
+    res = engine.calculate_country_risk(malformed, current_time=now)
+    assert isinstance(res["risk_index"], float)
+    assert res["risk_index"] >= 0.0
+    assert res["event_count"] == 1

@@ -49,11 +49,17 @@ export const api = {
   },
   getAlerts: (limit = 20) => apiRequest(`/alerts?limit=${limit}`),
   getWebhookStatus: () => apiRequest("/alerts/webhooks/status"),
-  runIngestion: () =>
-    apiRequest("/ingestion/run", {
+  runIngestion: (apiKey = "") => {
+    const headers = {};
+    const key = apiKey || (typeof sessionStorage !== "undefined" ? sessionStorage.getItem("geosentinel_admin_key") : "");
+    if (key) {
+      headers["X-API-Key"] = key;
+    }
+    return apiRequest("/ingestion/run", {
       method: "POST",
-      headers: { "X-API-Key": "geosentinel-admin-secret" },
-    }),
+      headers,
+    });
+  },
   getRiskGeoJSON: () => apiRequest("/risk/export/geojson"),
   getEventsCSVUrl: (countryIso = "") =>
     `${API_BASE}/events/export/csv${countryIso ? `?country_iso=${countryIso}` : ""}`,

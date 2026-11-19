@@ -15,7 +15,8 @@ export default function WorldRiskMap({
     return c.risk_tier.toUpperCase() === filterTier.toUpperCase();
   });
 
-  const getMarkerColor = (risk) => {
+  const getMarkerColor = (risk, count) => {
+    if (!count || count === 0) return '#64748b'; // Slate: Unmonitored / No Active Signals
     if (risk > 75) return '#dc2626'; // Alert Red
     if (risk > 60) return '#ef4444'; // Severe Crimson
     if (risk >= 30) return '#f59e0b'; // Moderate Amber
@@ -23,6 +24,7 @@ export default function WorldRiskMap({
   };
 
   const getMarkerRadius = (risk, count) => {
+    if (!count || count === 0) return 6;
     return Math.max(8, Math.min(26, 8 + Math.sqrt(risk) * 1.8 + Math.log1p(count) * 2));
   };
 
@@ -135,10 +137,11 @@ export default function WorldRiskMap({
 
           {/* Country Risk Markers */}
           {filteredCountries.map((c) => {
-            const color = getMarkerColor(c.risk_index);
+            const hasData = (c.event_count || 0) > 0;
+            const color = getMarkerColor(c.risk_index, c.event_count);
             const radius = getMarkerRadius(c.risk_index, c.event_count);
             const isSelected = selectedIso === c.country_iso;
-            const isCritical = c.risk_index > 75;
+            const isCritical = c.risk_index > 75 && hasData;
 
             return (
               <CircleMarker
@@ -147,9 +150,10 @@ export default function WorldRiskMap({
                 radius={radius}
                 pathOptions={{
                   fillColor: color,
-                  fillOpacity: isSelected ? 0.95 : 0.75,
+                  fillOpacity: isSelected ? 0.95 : hasData ? 0.75 : 0.40,
                   color: isSelected ? '#38bdf8' : isCritical ? '#f87171' : color,
-                  weight: isSelected ? 3 : isCritical ? 2.5 : 1.5,
+                  weight: isSelected ? 3 : isCritical ? 2.5 : hasData ? 1.5 : 1,
+                  dashArray: hasData ? null : '2, 4',
                 }}
                 eventHandlers={{
                   click: () => onSelectCountry(c.country_iso),
@@ -161,17 +165,25 @@ export default function WorldRiskMap({
                       <span>{c.country_name}</span>
                       <span className="font-mono text-[10px] text-cyan-400">({c.country_iso})</span>
                     </div>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="font-mono font-bold text-sm" style={{ color }}>
-                        {c.risk_index.toFixed(1)} / 100
-                      </span>
-                      <span className="px-1.5 py-0.2 rounded text-[10px] font-semibold bg-slate-800 text-slate-300">
-                        {c.risk_tier}
-                      </span>
-                    </div>
-                    <div className="text-[10px] text-slate-400 mt-0.5">
-                      {c.event_count} active events
-                    </div>
+                    {hasData ? (
+                      <>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="font-mono font-bold text-sm" style={{ color }}>
+                            {c.risk_index.toFixed(1)} / 100
+                          </span>
+                          <span className="px-1.5 py-0.2 rounded text-[10px] font-semibold bg-slate-800 text-slate-300">
+                            {c.risk_tier}
+                          </span>
+                        </div>
+                        <div className="text-[10px] text-slate-400 mt-0.5">
+                          {c.event_count} active events
+                        </div>
+                      </>
+                    ) : (
+                      <div className="text-[10px] text-slate-400 mt-1 italic">
+                        No active OSINT signals recorded
+                      </div>
+                    )}
                   </div>
                 </Tooltip>
 
@@ -182,15 +194,19 @@ export default function WorldRiskMap({
                       <span className="text-xs font-mono text-cyan-400">{c.country_iso}</span>
                     </h3>
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs text-slate-400">Risk Score:</span>
-                      <span className="font-mono font-bold text-base" style={{ color }}>
-                        {c.risk_index.toFixed(1)} <span className="text-xs text-slate-400">/ 100</span>
-                      </span>
+                      <span className="text-xs text-slate-400">Status / Risk:</span>
+                      {hasData ? (
+                        <span className="font-mono font-bold text-base" style={{ color }}>
+                          {c.risk_index.toFixed(1)} <span className="text-xs text-slate-400">/ 100</span>
+                        </span>
+                      ) : (
+                        <span className="font-mono text-xs text-slate-400">No Active Events</span>
+                      )}
                     </div>
                     <div className="flex items-center justify-between mb-3 text-xs">
                       <span className="text-slate-400">Tier Status:</span>
                       <span className="font-semibold" style={{ color }}>
-                        {c.risk_tier}
+                        {hasData ? c.risk_tier : 'Unmonitored / Baseline'}
                       </span>
                     </div>
                     <button
@@ -211,6 +227,10 @@ export default function WorldRiskMap({
         <div className="absolute bottom-3 right-3 z-20 bg-[#0D1422]/95 backdrop-blur-md p-3 rounded-xl border border-slate-800 shadow-xl text-xs flex flex-col gap-1.5 font-mono pointer-events-auto">
           <div className="text-[10px] uppercase text-slate-400 tracking-wider font-bold mb-0.5">
             Risk Tier Legend
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#64748B] border border-dashed border-slate-500"></span>
+            <span className="text-slate-400">No Active OSINT Signals</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-[#22C55E]"></span>

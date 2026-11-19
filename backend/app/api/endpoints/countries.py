@@ -239,7 +239,7 @@ async def get_country_history(iso: str, days: int = Query(30, ge=1, le=90), db: 
     hist_res = await db.execute(hist_stmt)
     db_history = hist_res.scalars().all()
 
-    if db_history and len(db_history) >= days // 2:
+    if db_history:
         history = []
         for h in db_history:
             factors = ensure_dict(h.contributing_factors)
@@ -247,36 +247,34 @@ async def get_country_history(iso: str, days: int = Query(30, ge=1, le=90), db: 
                 RiskHistoryPoint(
                     timestamp=h.recorded_at,
                     risk_score=h.risk_index,
-                    event_volume=max(1, h.event_count),
+                    event_volume=max(0, h.event_count),
                     sentiment=round(factors.get("sentiment_magnitude", -0.20), 2),
-                    conflict_share=round(factors.get("conflict_score", 0.40 * h.risk_index), 1),
-                    security_share=round(factors.get("security_score", 0.30 * h.risk_index), 1),
-                    economy_share=round(factors.get("economy_score", 0.20 * h.risk_index), 1),
-                    diplomacy_share=round(factors.get("diplomacy_score", 0.10 * h.risk_index), 1),
+                    conflict_share=round(factors.get("conflict_score", 0.0), 1),
+                    security_share=round(factors.get("security_score", 0.0), 1),
+                    economy_share=round(factors.get("economy_score", 0.0), 1),
+                    diplomacy_share=round(factors.get("diplomacy_score", 0.0), 1),
                 )
             )
         return history
 
-    # Grounded trajectory using actual half-life decay formula e^(-lambda * delta_t)
-    history = []
-    lambda_decay = 0.099021  # ln(2)/7
-    for d in range(days, 0, -1):
-        ts = now - timedelta(days=d)
-        decay_factor = math.exp(-lambda_decay * (d / 3.0))
-        point_risk = round(max(5.0, min(100.0, cur_risk * (1.0 - 0.5 * decay_factor))), 2)
-        history.append(
+    # If no historical series records exist but current score exists, return single observed point
+    if score_obj:
+        factors = ensure_dict(score_obj.contributing_factors)
+        return [
             RiskHistoryPoint(
-                timestamp=ts,
-                risk_score=point_risk,
-                event_volume=max(1, int(point_risk / 12)),
-                sentiment=round(-0.15 - (point_risk / 200.0), 2),
-                conflict_share=round(0.40 * point_risk, 1),
-                security_share=round(0.30 * point_risk, 1),
-                economy_share=round(0.20 * point_risk, 1),
-                diplomacy_share=round(0.10 * point_risk, 1),
+                timestamp=score_obj.calculated_at or now,
+                risk_score=score_obj.risk_index,
+                event_volume=max(0, score_obj.event_count),
+                sentiment=round(factors.get("sentiment_magnitude", -0.20), 2),
+                conflict_share=round(factors.get("conflict_score", 0.0), 1),
+                security_share=round(factors.get("security_score", 0.0), 1),
+                economy_share=round(factors.get("economy_score", 0.0), 1),
+                diplomacy_share=round(factors.get("diplomacy_score", 0.0), 1),
             )
-        )
-    return history
+        ]
+
+    # Return empty list honestly when no historical observations exist - never fabricate synthetic curves
+    return []
 
 @router.get("/countries/{iso}/summary", response_model=ExecutiveSummaryResponse)
 async def get_country_summary(iso: str, db: AsyncSession = Depends(get_db)):

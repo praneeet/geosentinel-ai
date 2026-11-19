@@ -46,7 +46,23 @@ export default function App() {
   const handleTriggerIngest = async () => {
     setIsIngesting(true);
     try {
-      const res = await api.runIngestion();
+      let key = (typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('geosentinel_admin_key') : '') || '';
+      let res;
+      try {
+        res = await api.runIngestion(key);
+      } catch (authErr) {
+        if (authErr.message?.includes('401') || authErr.message?.includes('403') || authErr.message?.includes('Unauthorized') || authErr.message?.includes('Forbidden')) {
+          const inputKey = window.prompt('Administrator authorization required. Enter operational X-API-Key:');
+          if (inputKey && inputKey.trim()) {
+            sessionStorage.setItem('geosentinel_admin_key', inputKey.trim());
+            res = await api.runIngestion(inputKey.trim());
+          } else {
+            throw new Error('Ingestion cancelled: Admin API key required.');
+          }
+        } else {
+          throw authErr;
+        }
+      }
       loadDashboardData();
       setIngestNotification(
         `Ingested ${res.raw_articles_fetched} articles (${res.unique_articles_saved} unique, ${res.exact_duplicates + res.near_duplicates} deduped). Recalculated risk across ${res.affected_countries_count} regions.`
@@ -54,6 +70,8 @@ export default function App() {
       setTimeout(() => setIngestNotification(null), 6000);
     } catch (e) {
       console.error('Ingestion failed:', e);
+      setIngestNotification(`Operational alert: ${e.message || 'Ingestion request failed'}`);
+      setTimeout(() => setIngestNotification(null), 6000);
     } finally {
       setIsIngesting(false);
     }

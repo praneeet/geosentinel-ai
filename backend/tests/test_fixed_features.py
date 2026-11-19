@@ -57,7 +57,28 @@ async def test_alerts_webhook_status():
 
 @pytest.mark.asyncio
 async def test_country_history_grounded_trajectory():
-    """Verify country history endpoint returns structured time series with category points."""
+    """Verify country history endpoint returns real persistent historical observations."""
+    from app.database.session import async_session_factory
+    from app.models.risk_history import RiskScoreHistory
+    from datetime import datetime, timezone, timedelta
+    import uuid
+
+    # Seed real historical observations for UKR
+    now = datetime.now(timezone.utc)
+    async with async_session_factory() as session:
+        for d in range(7, 0, -1):
+            h = RiskScoreHistory(
+                history_id=str(uuid.uuid4()),
+                country_iso="UKR",
+                risk_index=65.0 - d * 1.5,
+                risk_tier="Severe" if (65.0 - d * 1.5) > 60 else "Moderate",
+                event_count=5 + d,
+                contributing_factors={"conflict_score": 30.0, "security_score": 15.0},
+                recorded_at=now - timedelta(days=d),
+            )
+            session.add(h)
+        await session.commit()
+
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         res = await client.get("/api/countries/UKR/history?days=14")

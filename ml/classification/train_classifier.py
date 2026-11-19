@@ -84,7 +84,8 @@ def run_training_pipeline():
 - **Institution**: Ajay Kumar Garg Engineering College, Ghaziabad
 - **Department**: Information Technology
 - **Project Group**: 2023-27 / CSIT-2 / GROUP-32
-- **Architecture**: DistilBERT Base Sequence Classifier Head / TF-IDF N-Gram Logistic Baseline
+- **Architecture**: Calibrated TF-IDF (1-2 N-grams) + L2-Regularized Logistic Regression (Primary Production Engine)
+- **Model Role**: Low-latency deterministic inference with calibrated class probabilities and uncertain fallback threshold; DistilBERT research branch documented for GPU environments
 - **Target Metric**: Macro F1 $\\ge 0.85$
 
 ## Measured Results (Holdout Test Split)
@@ -103,8 +104,8 @@ Labels: `[CONFLICT, SECURITY, ECONOMY, DIPLOMACY]`
 {conf_mat}
 ```
 
-## Reproducibility Note
-This report and model artifact are generated directly by `ml/classification/train_classifier.py`. The model is saved to `backend/app/nlp/classifier_model.joblib` and hot-loaded by the backend NLP pipeline.
+## Reproducibility & Model Artifact
+This report and model artifact are generated directly by `ml/classification/train_classifier.py`. The model is saved to `backend/app/nlp/classifier_model.joblib` and hot-loaded by `backend/app/nlp/classifier.py` with automatic fallback to keyword heuristics if weights are missing.
 """
     with open(os.path.join(report_dir, "classification_report.md"), "w", encoding="utf-8") as f:
         f.write(report_md)

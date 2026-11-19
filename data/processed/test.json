@@ -1,50 +1,30 @@
 [
   {
-    "text": "Reports confirm: State cyber defense command blocked coordinated ransomware assault targeting national power grid substations.",
-    "label": "SECURITY"
+    "text": "Reports confirm: Heads of state concluded high-level bilateral peace talks signing an enduring maritime demarcation treaty.",
+    "label": "DIPLOMACY"
+  },
+  {
+    "text": "Government officials stated that foreign ministry dispatched goodwill delegation to mediate de-escalation protocols along border buffer corridors.",
+    "label": "DIPLOMACY"
+  },
+  {
+    "text": "Government officials stated that special forces commandos engaged hostile insurgents during counter-ambush operations in forest valleys.",
+    "label": "CONFLICT"
   },
   {
     "text": "Reports confirm: Infantry battalions engaged in intense urban combat as cross-border firefights erupted.",
     "label": "CONFLICT"
   },
   {
-    "text": "Government officials stated that export embargoes enacted on agricultural commodities and critical fertilizer minerals.",
-    "label": "ECONOMY"
-  },
-  {
-    "text": "Ambassadors convened multilateral summit in Geneva reaching consensus on humanitarian relief convoy corridors.",
-    "label": "DIPLOMACY"
-  },
-  {
-    "text": "Reports confirm: Hostile militias initiated a coordinated offensive against sovereign defensive perimeter garrisons.",
-    "label": "CONFLICT"
-  },
-  {
-    "text": "Government officials stated that national treasury announced emergency currency stabilization measures amidst escalating inflation.",
-    "label": "ECONOMY"
-  },
-  {
-    "text": "Government officials stated that consular relations restored between regional powers following successful ambassadorial consultations.",
-    "label": "DIPLOMACY"
-  },
-  {
-    "text": "Government officials stated that national security council deployed anti-aircraft batteries around sovereign government installations.",
+    "text": "Government officials stated that defense intelligence agency issued alert regarding suspected state-sponsored cyber penetration of telecom networks.",
     "label": "SECURITY"
   },
   {
-    "text": "Reports confirm: Counter-terrorism units executed pre-dawn search raids seizing military-grade encrypted communication equipment.",
-    "label": "SECURITY"
-  },
-  {
-    "text": "Reports confirm: Airstrikes destroyed ammunition bunkers and rail supply arteries in contested southern theater.",
+    "text": "Anti-tank guided missiles destroyed multiple armored transport vehicles in disputed valley.",
     "label": "CONFLICT"
   },
   {
-    "text": "Government officials stated that energy ministers negotiated emergency gas reserve quotas to counter deep pipeline supply bottlenecks.",
-    "label": "ECONOMY"
-  },
-  {
-    "text": "Government officials stated that border skirmishes escalated following heavy mortar fire exchange along mountain forward outposts.",
+    "text": "Hostile militias initiated a coordinated offensive against sovereign defensive perimeter garrisons.",
     "label": "CONFLICT"
   },
   {
@@ -52,47 +32,151 @@
     "label": "ECONOMY"
   },
   {
-    "text": "Reports confirm: Commerce authorities enforced strict export curbs on high-end semiconductor foundry equipment and rare earth ores.",
+    "text": "Commerce authorities enforced strict export curbs on high-end semiconductor foundry equipment and rare earth ores.",
     "label": "ECONOMY"
   },
   {
-    "text": "Maritime patrol aircraft detected unidentified submarines operating within exclusive economic exclusion zones.",
+    "text": "Reports confirm: Maritime shipping insurers surged war-risk premiums after naval drone threats disrupted strategic chokepoint transit.",
+    "label": "ECONOMY"
+  },
+  {
+    "text": "Defense intelligence agency issued alert regarding suspected state-sponsored cyber penetration of telecom networks.",
     "label": "SECURITY"
   },
   {
-    "text": "Reports confirm: Ministers of foreign affairs held emergency trilateral talks to establish diplomatic dialogue channels.",
-    "label": "DIPLOMACY"
+    "text": "Government officials stated that counter-terrorism units executed pre-dawn search raids seizing military-grade encrypted communication equipment.",
+    "label": "SECURITY"
   },
   {
-    "text": "Reports confirm: Energy ministers negotiated emergency gas reserve quotas to counter deep pipeline supply bottlenecks.",
+    "text": "Reports confirm: National treasury announced emergency currency stabilization measures amidst escalating inflation.",
     "label": "ECONOMY"
   },
   {
-    "text": "Government officials stated that tactical ballistic missiles impacted forward air defense positions across the frontline corridor.",
-    "label": "CONFLICT"
+    "text": "Central bank raised benchmark interest rates by 75 basis points to stabilize sliding currency exchange rate.",
+    "label": "ECONOMY"
   },
   {
-    "text": "Ministers of foreign affairs held emergency trilateral talks to establish diplomatic dialogue channels.",
+    "text": "Reports confirm: Diplomatic mission reopened after five-year suspension of formal ambassadorial ties.",
     "label": "DIPLOMACY"
   },
   {
-    "text": "Consular relations restored between regional powers following successful ambassadorial consultations.",
-    "label": "DIPLOMACY"
+    "text": "Reports confirm: Critical infrastructure protection agency hardened water treatment facilities against remote SCADA tampering.",
+    "label": "SECURITY"
   },
   {
     "text": "Military intelligence services detained hostile reconnaissance drone operators near airbase perimeter.",
     "label": "SECURITY"
   },
   {
-    "text": "Government officials stated that maritime patrol aircraft detected unidentified submarines operating within exclusive economic exclusion zones.",
-    "label": "SECURITY"
+    "text": "Government officials stated that hostile militias initiated a coordinated offensive against sovereign defensive perimeter garrisons.",
+    "label": "CONFLICT"
   },
   {
-    "text": "Government officials stated that ambassadors convened multilateral summit in geneva reaching consensus on humanitarian relief convoy corridors.",
+    "text": "Government officials stated that government debt auction faced subdued institutional demand pushing 10-year sovereign bond yields to multi-year highs.",
+    "label": "ECONOMY"
+  },
+  {
+    "text": "Reports confirm: Tactical ballistic missiles impacted forward air defense positions across the frontline corridor.",
+    "label": "CONFLICT"
+  },
+  {
+    "text": "Reports confirm: Foreign ministry dispatched goodwill delegation to mediate de-escalation protocols along border buffer corridors.",
     "label": "DIPLOMACY"
   },
   {
-    "text": "Infantry battalions engaged in intense urban combat as cross-border firefights erupted.",
+    "text": "Reports confirm: Foreign ambassadors summoned to ministry of foreign affairs to receive formal diplomatic protest note.",
+    "label": "DIPLOMACY"
+  },
+  {
+    "text": "Reports confirm: Bilateral trade sanctions imposed on critical banking networks freezing cross-border capital liquidity.",
+    "label": "ECONOMY"
+  },
+  {
+    "text": "Reports confirm: Peace summit delegates initialed a preliminary disarmament framework under international supervision.",
+    "label": "DIPLOMACY"
+  },
+  {
+    "text": "Government officials stated that tactical ballistic missiles impacted forward air defense positions across the frontline corridor.",
     "label": "CONFLICT"
+  },
+  {
+    "text": "Government officials stated that naval frigates repelled hostile explosive-laden unmanned surface vessels near offshore natural gas platforms.",
+    "label": "CONFLICT"
+  },
+  {
+    "text": "Reports confirm: Regional security organization held annual ministerial summit adopting non-aggression joint declaration.",
+    "label": "DIPLOMACY"
+  },
+  {
+    "text": "United Nations special rapporteur conducted fact-finding mission examining humanitarian access across conflict line.",
+    "label": "DIPLOMACY"
+  },
+  {
+    "text": "Reports confirm: Emergency civil protection agencies conducted nationwide disaster response and air-raid siren readiness exercises.",
+    "label": "SECURITY"
+  },
+  {
+    "text": "Reports confirm: Airstrikes destroyed ammunition bunkers and rail supply arteries in contested southern theater.",
+    "label": "CONFLICT"
+  },
+  {
+    "text": "Trench warfare intensified as mechanized units launched coordinated counterattacks along defensive lines.",
+    "label": "CONFLICT"
+  },
+  {
+    "text": "Foreign ministry dispatched goodwill delegation to mediate de-escalation protocols along border buffer corridors.",
+    "label": "DIPLOMACY"
+  },
+  {
+    "text": "Government officials stated that industrial manufacturing slowed down as container supply chains faced severe maritime diversions.",
+    "label": "ECONOMY"
+  },
+  {
+    "text": "Government officials stated that energy ministers negotiated emergency gas reserve quotas to counter deep pipeline supply bottlenecks.",
+    "label": "ECONOMY"
+  },
+  {
+    "text": "Government officials stated that internal security services dismantled foreign espionage ring operating near sensitive aerospace laboratories.",
+    "label": "SECURITY"
+  },
+  {
+    "text": "Reports confirm: Neighboring governments exchanged ratified diplomatic accords establishing shared maritime environmental protections.",
+    "label": "DIPLOMACY"
+  },
+  {
+    "text": "Reports confirm: Crude oil futures spiked sharply following unexpected supply disruption at major export terminal.",
+    "label": "ECONOMY"
+  },
+  {
+    "text": "Reports confirm: Internal security services dismantled foreign espionage ring operating near sensitive aerospace laboratories.",
+    "label": "SECURITY"
+  },
+  {
+    "text": "Bilateral currency swap agreement signed between regional central banks to facilitate non-dollar trade settlement.",
+    "label": "ECONOMY"
+  },
+  {
+    "text": "Government officials stated that trench warfare intensified as mechanized units launched coordinated counterattacks along defensive lines.",
+    "label": "CONFLICT"
+  },
+  {
+    "text": "Government officials stated that strategic ballistic missile brigades commenced operational readiness maneuvers with road-mobile launchers.",
+    "label": "SECURITY"
+  },
+  {
+    "text": "Counter-terrorism units executed pre-dawn search raids seizing military-grade encrypted communication equipment.",
+    "label": "SECURITY"
+  },
+  {
+    "text": "Maritime shipping insurers surged war-risk premiums after naval drone threats disrupted strategic chokepoint transit.",
+    "label": "ECONOMY"
+  },
+  {
+    "text": "Reports confirm: Counter-terrorism units executed pre-dawn search raids seizing military-grade encrypted communication equipment.",
+    "label": "SECURITY"
+  },
+  {
+    "text": "Regional security organization held annual ministerial summit adopting non-aggression joint declaration.",
+    "label": "DIPLOMACY"
   }
 ]
